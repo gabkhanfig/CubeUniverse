@@ -1,0 +1,294 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\AssemblyBuilderA64.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\AssemblyBuilderX64.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\AstJsonEncoder.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\AstQuery.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\AstQueryDsl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\AstVisitor.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Autocomplete.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\BuiltinDefinitions.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\ClassFixture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\CodeAllocator.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Compiler.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Config.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\ConstraintGeneratorFixture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\ConstraintSolver.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\CostModel.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\DataFlowGraph.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\DenseHash.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\DiffAsserts.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Differ.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Error.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Fixture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Frontend.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\InsertionOrderedMap.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\IrBuilder.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\IrCallWrapperX64.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\IrRegAllocX64.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\JsonEmitter.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Lexer.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Linter.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\LValue.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Module.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\NonstrictMode.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\NonStrictTypeChecker.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Normalize.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\NotNull.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Parser.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\RegisterCallbacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\RequireTracer.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\RuntimeLimits.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Simplify.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Set.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\StringUtils.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Subtyping.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Symbol.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\ToDot.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TopoSort.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\ToString.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Transpiler.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TxnLog.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeFamily.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.aliases.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.annotations.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.anyerror.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.builtins.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.cfa.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.classes.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.definitions.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.functions.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.generics.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.intersectionTypes.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.loops.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.modules.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.negations.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.oop.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.operators.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.primitives.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.provisional.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.refinements.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.rwprops.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.singletons.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.tables.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.tryUnify.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.typePacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.typestates.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.unionTypes.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeInfer.unknownnever.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypePack.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypePath.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\TypeVar.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Unifier2.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Variant.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\VisitType.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\AstQueryDsl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\ClassFixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\ConstraintGeneratorFixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\DiffAsserts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\Fixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\IostreamOptional.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\RegisterCallbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tests\ScopedFlags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{DD8DC200-C0A5-386F-9B93-280F2B34B9D0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{9098CAF5-B954-391C-BCFC-7BA05ECF815B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

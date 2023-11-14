@@ -10,6 +10,8 @@ if (POLICY CMP0141)
 endif()
 
 project ("CubeUniverse")
-
 # Include sub-projects.
 add_subdirectory ("CubeUniverse/src")
+add_subdirectory ("CubeUniverse/dependencies/luau")
+
+
