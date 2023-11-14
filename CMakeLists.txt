@@ -9,9 +9,17 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+
+
 project ("CubeUniverse")
 # Include sub-projects.
 add_subdirectory ("CubeUniverse/src")
+add_subdirectory ("CubeUniverse/tests")
+
+# Dependencies
 add_subdirectory ("CubeUniverse/dependencies/luau")
+add_subdirectory ("CubeUniverse/dependencies/googletest-1.14.0")
+
+
 
 

@@ -13,8 +13,10 @@ endif()
 
 
 #target_link_libraries(CubeUniverse Luau)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 target_link_libraries(CubeUniverse Luau.VM)
 target_link_libraries(CubeUniverse Luau.Compiler)
+# target_link_libraries(CubeUniverse gtest_main)
 
 # TODO: Add tests and install targets if needed.
