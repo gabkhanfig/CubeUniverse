@@ -17,7 +17,7 @@ add_subdirectory ("CubeUniverse/src")
 add_subdirectory ("CubeUniverse/tests")
 
 # Dependencies
-add_subdirectory ("CubeUniverse/dependencies/luau")
+add_subdirectory ("CubeUniverse/dependencies/luau-0.603")
 add_subdirectory ("CubeUniverse/dependencies/googletest-1.14.0")
 
 
