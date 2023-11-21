@@ -14,6 +14,8 @@ endif()
 #target_link_libraries(CubeUniverse Luau)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
+target_link_libraries(CubeUniverseTest core)
+target_link_libraries(CubeUniverseTest CubeUniverseLib)
 target_link_libraries(CubeUniverseTest Luau.VM)
 target_link_libraries(CubeUniverseTest Luau.Compiler)
 target_link_libraries(CubeUniverseTest gtest_main)
