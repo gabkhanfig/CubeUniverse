@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : Top-level CMake project file, do global configuration
 # and include sub-projects here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.12)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -11,14 +11,13 @@ endif()
 
 project ("CubeUniverse")
 # Include sub-projects.
-add_subdirectory ("CubeUniverse/core")
-#add_subdirectory ("CubeUniverse/src")
-add_subdirectory ("CubeUniverse/game")
-add_subdirectory ("CubeUniverse/tests")
+add_subdirectory ("core")
+add_subdirectory ("game")
+add_subdirectory ("tests")
 
 # Dependencies
-add_subdirectory ("CubeUniverse/dependencies/luau-0.603")
-add_subdirectory ("CubeUniverse/dependencies/googletest-1.14.0")
+add_subdirectory ("dependencies/luau-0.603")
+add_subdirectory ("dependencies/googletest-1.14.0")
 
 
 

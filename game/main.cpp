@@ -4,8 +4,7 @@
 #include <luacode.h>
 #include <windows.h>
 
-
-#include <cube_core/core.h>
+#include <core/core.h>
 
 struct lua_CompileOptions options;
 
@@ -23,7 +22,7 @@ int main() {
 	size_t binarySize;
 	luau_compile("print(\"e\")", 11, &options, &binarySize);
 	printMultiply(10, 6);
-	std::cout << "whoa cmake!\n";
+	std::cout << "whoa... cmake!\n";
 	return 0;
 }
 #endif

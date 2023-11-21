@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-
-#include <cube_core/core.h>
+#include <core/core.h>
+#include <game/lib.h>
 
 int main(int argc, char** argv) {
 	::testing::InitGoogleTest(&argc, argv);
@@ -12,5 +12,5 @@ TEST(Something, Something) {
 }
 
 TEST(Game, Add) {
-
+	EXPECT_EQ(addNumbers(1, 1), 2);
 }
