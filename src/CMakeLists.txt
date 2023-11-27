@@ -11,11 +11,24 @@ target_compile_definitions(CubeUniverse PUBLIC
 
 target_compile_definitions(CubeUniverseTest PUBLIC CUBE_UNIVERSE_TEST GK_TYPES_LIB_TEST)
 
+#message(STATUS "Attempting auto locate Vulkan using CMake......")
+find_package(Vulkan REQUIRED)
+target_link_libraries(CubeUniverse Vulkan::Vulkan)
+#target_link_libraries(CubeUniverse ${Vulkan_LIBRARY})
+#target_link_directories(CubeUniverse PUBLIC ${Vulkan_INCLUDE_DIR})
+
+#include_directories("$ENV{VULKAN_SDK}/Include")
+#target_link_libraries(CubeUniverse "$ENV{VULKAN_SDK}/Lib/vulkan-1.lib")
+
+#include_directories(${Vulkan_INCLUDE_DIRS})
+#target_link_libraries(CubeUniverse ${Vulkan_LIBRARIES})
+
 set(TARGET_LIBS 
 Luau.VM 
 Luau.Compiler 
 GkTypesLib 
-glm)
+glm
+glfw)
 
 target_link_libraries(CubeUniverse ${TARGET_LIBS})
 target_link_libraries(CubeUniverseTest ${TARGET_LIBS})
