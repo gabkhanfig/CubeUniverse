@@ -9,13 +9,16 @@ target_compile_definitions(CubeUniverse PUBLIC
 	$<$<CONFIG:Release>:CUBE_SHIPPING GK_TYPES_LIB_SHIPPING>
 )
 
-target_link_libraries(CubeUniverse Luau.VM)
-target_link_libraries(CubeUniverse Luau.Compiler)
-target_link_libraries(CubeUniverse GkTypesLib)
-
-target_link_libraries(CubeUniverseTest Luau.VM)
-target_link_libraries(CubeUniverseTest Luau.Compiler)
-target_link_libraries(CubeUniverseTest GkTypesLib)
-
 target_compile_definitions(CubeUniverseTest PUBLIC CUBE_UNIVERSE_TEST GK_TYPES_LIB_TEST)
+
+set(TARGET_LIBS 
+Luau.VM 
+Luau.Compiler 
+GkTypesLib 
+glm)
+
+target_link_libraries(CubeUniverse ${TARGET_LIBS})
+target_link_libraries(CubeUniverseTest ${TARGET_LIBS})
+
+
 
