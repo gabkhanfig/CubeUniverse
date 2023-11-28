@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.12)
 
-add_executable (CubeUniverse "main.cpp")
-add_executable (CubeUniverseTest "test.cpp")
+add_executable (CubeUniverse "main.cpp" "world/n_tree/tree_index.cpp")
+add_executable (CubeUniverseTest "test.cpp" "world/n_tree/tree_index.cpp")
 
 target_compile_definitions(CubeUniverse PUBLIC
 	$<$<CONFIG:Debug>:CUBE_DEBUG GK_TYPES_LIB_DEBUG>
@@ -13,25 +13,17 @@ target_compile_definitions(CubeUniverseTest PUBLIC CUBE_UNIVERSE_TEST GK_TYPES_L
 
 #message(STATUS "Attempting auto locate Vulkan using CMake......")
 find_package(Vulkan REQUIRED)
-target_link_libraries(CubeUniverse Vulkan::Vulkan)
-#target_link_libraries(CubeUniverse ${Vulkan_LIBRARY})
-#target_link_directories(CubeUniverse PUBLIC ${Vulkan_INCLUDE_DIR})
-
-#include_directories("$ENV{VULKAN_SDK}/Include")
-#target_link_libraries(CubeUniverse "$ENV{VULKAN_SDK}/Lib/vulkan-1.lib")
-
-#include_directories(${Vulkan_INCLUDE_DIRS})
-#target_link_libraries(CubeUniverse ${Vulkan_LIBRARIES})
 
 set(TARGET_LIBS 
 Luau.VM 
 Luau.Compiler 
 GkTypesLib 
 glm
-glfw)
+glfw
+Vulkan::Vulkan)
 
 target_link_libraries(CubeUniverse ${TARGET_LIBS})
 target_link_libraries(CubeUniverseTest ${TARGET_LIBS})
 
-
-
+target_include_directories(CubeUniverse PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+target_include_directories(CubeUniverseTest PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
