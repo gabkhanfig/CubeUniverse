@@ -35,8 +35,8 @@ namespace world
 		* Sets the indices and total depth given a pointer and a range within it.
 		* Assumes that indices[count] is a valid index.
 		* 
-		* @param nodeIndices: Pointer to indices. Every value must be less than 64 (4x4x4)
-		* @param count: Number of elements to read from indices as an array.
+		* @param nodeIndices: Pointer to indices. Every value must be less than world::TREE_NODES_PER_LAYER
+		* @param count: Number of elements to read from indices as an array. Must be between 0 - 5.
 		*/
 		void setIndices(const u16* nodeIndices, usize count);
 

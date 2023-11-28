@@ -1,5 +1,7 @@
 #include "tree_index.h"
 
+constexpr usize BITSHIFT_MULTIPLY = 12;
+
 u8 world::TreeDepthIndices::len() const
 {
 	const usize shifted = this->value >> 60;
@@ -12,8 +14,8 @@ gk::Option<u16> world::TreeDepthIndices::indexAtDepth(u8 depth) const
 	if (depth >= len()) {
 		return gk::Option<u16>();
 	}
-	constexpr usize bitmask = 0b111111111111; // 4096 different values -> 16 x 16 x 16
-	const usize bitShift = depth * 12;
+	constexpr usize bitmask = TREE_NODES_PER_LAYER - 1; // 4096 different values -> (16 x 16 x 16) - 1
+	const usize bitShift = static_cast<usize>(depth) * BITSHIFT_MULTIPLY;
 	const u16 index = (this->value >> bitShift) & bitmask;
 	return gk::Option<u16>(index);
 }
@@ -22,9 +24,9 @@ void world::TreeDepthIndices::setIndices(const u16* nodeIndices, usize count)
 {
 	check_message(count <= TREE_LAYERS, "count must be less than or equal to world::TREE_LAYERS");
 	usize newValue = 0;
-	for (u8 i = 0; i < count; i++) {
+	for (usize i = 0; i < count; i++) {
 		check_message(nodeIndices[i] < TREE_NODES_PER_LAYER, "Tree Index cannot exceed world::TREE_NODES_PER_LAYER");
-		const usize bitShift = i * 12;
+		const usize bitShift = i * BITSHIFT_MULTIPLY;
 		newValue |= static_cast<usize>(nodeIndices[i]) << bitShift;
 	}
 	newValue |= count << 60;
@@ -45,8 +47,8 @@ void world::TreeDepthIndices::unsafeSetIndexAtDepth(u16 nodeIndex, u8 depth)
 	check_message(depth > 0, "depth must be greater than 0");
 	check_message(nodeIndex < TREE_NODES_PER_LAYER, "Tree Index cannot exceed world::TREE_NODES_PER_LAYER");
 
-	const usize bitShift = depth * 12;
-	const usize mask = ~(0b111111111111ULL << bitShift);
+	const usize bitShift = static_cast<usize>(depth) * BITSHIFT_MULTIPLY;
+	const usize mask = ~(static_cast<usize>((TREE_NODES_PER_LAYER - 1)) << bitShift);
 
 	this->value = (this->value & mask) | (static_cast<usize>(nodeIndex) << bitShift);
 }
