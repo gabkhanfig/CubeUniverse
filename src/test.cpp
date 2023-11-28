@@ -1,5 +1,8 @@
-#include <iostream>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <gk_types_lib/doctest/doctest_proxy.h>
 
-int main() {
-	std::cout << "cube universe test!" << '\n';
-}
+//#include <iostream>
+//
+//int main() {
+//	std::cout << "cube universe test!" << '\n';
+//}
