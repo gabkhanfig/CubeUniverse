@@ -79,6 +79,4 @@ namespace world
 		usize value;
 	};
 
-
-
-}
+} // namespace world
