@@ -5,8 +5,28 @@
 
 namespace world
 {
-	constexpr u16 TREE_NODES_PER_LAYER = 16 * 16 * 16;
+	constexpr u16 TREE_NODE_LENGTH = 16;
+	constexpr u16 TREE_NODES_PER_LAYER = TREE_NODE_LENGTH * TREE_NODE_LENGTH * TREE_NODE_LENGTH;
 	constexpr usize TREE_LAYERS = 5;
+
+	namespace internal
+	{
+		constexpr i32 calculateTotalNodeLength() {
+			i32 currentVal = TREE_NODE_LENGTH;
+
+			for (usize i = 1; i < TREE_LAYERS; i++) {
+				currentVal *= static_cast<i32>(TREE_NODE_LENGTH);
+			}
+			return currentVal;
+		}
+	}
+
+	/**
+	* The amount of nodes required on a single dimension to fit the entire tree.
+	* Can be thought of as the amount of chunks long/wide/tall the tree is.
+	*/
+	constexpr i32 TOTAL_NODES_DEEPEST_LAYER_WHOLE_TREE = internal::calculateTotalNodeLength();
+
 
 	struct TreeDepthIndices {
 		TreeDepthIndices() : value(0) {}
