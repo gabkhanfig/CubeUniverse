@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gk_types_lib/basic_types.h>
+#include <gk_types_lib/array/array_list.h>
 
 using i8 = gk::i8;
 using i16 = gk::i16;
@@ -11,3 +12,6 @@ using u16 = gk::u16;
 using u32 = gk::u32;
 using u64 = gk::u64;
 using usize = gk::usize;
+
+template<typename T>
+using ArrayList = gk::ArrayList<T>;
