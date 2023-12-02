@@ -5,9 +5,9 @@
 
 namespace world
 {
-	constexpr u16 TREE_NODE_LENGTH = 16;
+	constexpr u16 TREE_NODE_LENGTH = 8;
 	constexpr u16 TREE_NODES_PER_LAYER = TREE_NODE_LENGTH * TREE_NODE_LENGTH * TREE_NODE_LENGTH;
-	constexpr usize TREE_LAYERS = 5;
+	constexpr usize TREE_LAYERS = 7;
 
 	namespace internal
 	{
@@ -29,68 +29,82 @@ namespace world
 
 
 	struct TreeDepthIndices {
-		TreeDepthIndices() : value(0) {}
+		constexpr TreeDepthIndices() : value(0) {}
 		TreeDepthIndices(const TreeDepthIndices&) = default;
 		TreeDepthIndices(TreeDepthIndices&&) = default;
 		TreeDepthIndices& operator = (const TreeDepthIndices&) = default;
 		TreeDepthIndices& operator = (TreeDepthIndices&&) = default;
 
 		/**
-		* How many layers deep are the indices valid.
-		* 
-		* @return Value from 0 - 5 (inclusive)
-		*/
-		u8 len() const;
-
-		/**
 		* Gets the specific node index at a given tree layer.
-		* Ranges from 0 - 4095 (inclusive). If `depth` is out of range, will be a None option.
-		* 
-		* @param depth: Node layer as an array index. Value ranging from 0 - 4 (inclusive)
-		* @return Some containing the index, or None if the depth is out of range.
-		*/
-		gk::Option<u16> indexAtDepth(u8 depth) const;
-
-		/**
-		* Sets the indices and total depth given a pointer and a range within it.
-		* Assumes that indices[count] is a valid index.
-		* 
-		* @param nodeIndices: Pointer to indices. Every value must be less than world::TREE_NODES_PER_LAYER
-		* @param count: Number of elements to read from indices as an array. Must be between 0 - 5.
-		*/
-		void setIndices(const u16* nodeIndices, usize count);
-
-		/**
-		* Forcefully set the length (number of layers referenced) of the tree indices. Assumes that all indices up to `newDepth` are valid.
 		*
-		* @param newDepth: Value ranging from 0 - 5 (inclusive)
+		* @param layer: Node layer as an array index. Value ranging from 0 - 6 (inclusive)
+		* @return The index of the node in the tree layer. Ranges from 0 - 511 (inclusive).
 		*/
-		void unsafeSetDepth(u8 newDepth);
+		constexpr u16 indexAtLayer(u8 layer) const {
+			check_message(layer < TREE_LAYERS, "depth must be less than world::TREE_LAYERS");
+
+			constexpr usize BITSHIFT_MULTIPLY = 9;
+			constexpr usize bitmask = TREE_NODES_PER_LAYER - 1;
+
+			const usize bitShift = static_cast<usize>(layer) * BITSHIFT_MULTIPLY;
+			const u16 index = (this->value >> bitShift) & bitmask;
+			return  index;
+		}
 
 		/**
-		* Forcefully set the index at a given depth. See `unsafeSetDepth()` for manually
-		* setting the depth of the tree indices.
-		* 
-		* @param nodeIndex: Specific node in a tree layer. Value ranging from 0 - 4095 (inclusive)
-		* @param depth: Specific layer in the tree as array index. Value ranging from 0 - 4 (inclusive)
+		* Sets the indices up to `count` given a pointer and a range within it.
+		* Assumes that indices[count - 1] is a valid index.
+		*
+		* @param nodeIndices: Pointer to indices. Every value must be less than world::TREE_NODES_PER_LAYER
+		* @param count: Number of elements to read from indices as an array. Must be between 0 - 7.
 		*/
-		void unsafeSetIndexAtDepth(u16 nodeIndex, u8 depth);
+		constexpr void setIndices(const u16* nodeIndices, usize count) {
+			check_message(count <= TREE_LAYERS, "count must be less than or equal to world::TREE_LAYERS");
+
+			constexpr usize BITSHIFT_MULTIPLY = 9;
+			usize newValue = 0;
+			for (usize i = 0; i < count; i++) {
+				check_message(nodeIndices[i] < TREE_NODES_PER_LAYER, "Tree Index cannot exceed world::TREE_NODES_PER_LAYER");
+				const usize bitShift = i * BITSHIFT_MULTIPLY;
+				newValue |= static_cast<usize>(nodeIndices[i]) << bitShift;
+			}
+			this->value = newValue;
+		}
+
+		/**
+		* Set the index at a given layer.
+		*
+		* @param index: Which node in a tree layer. Value ranging from 0 - 511 (inclusive)
+		* @param layer: Which layer in the tree. Value ranging from 0 - 6 (inclusive)
+		*/
+		constexpr void setIndexAtLayer(u16 index, u8 layer) {
+			check_message(layer < TREE_LAYERS, "depth must be less than world::TREE_LAYERS");
+			check_message(index < TREE_NODES_PER_LAYER, "Tree Index cannot exceed world::TREE_NODES_PER_LAYER");
+
+			constexpr usize BITSHIFT_MULTIPLY = 9; 
+			const usize bitShift = static_cast<usize>(layer) * BITSHIFT_MULTIPLY;
+			const usize mask = ~(static_cast<usize>((TREE_NODES_PER_LAYER - 1)) << bitShift);
+
+			this->value = (this->value & mask) | (static_cast<usize>(index) << bitShift);
+		}
 
 		/**
 		* Get the internal value used to store the indices and depth.
 		* 
 		* Layout:
 		* 
-		* Bits 0 - 11 = Layer 0 node index
-		* Bits 12 - 23 = Layer 1 node index
-		* Bits 24 - 35 = Layer 2 node index
-		* Bits 36 - 47 = Layer 3 node index
-		* Bits 48 - 59 = Layer 4 node index
-		* Bits 60 - 63 = Number of layers stored
+		* Bits 0 - 8 = Layer 0 node index
+		* Bits 9 - 17 = Layer 1 node index
+		* Bits 18 - 26 = Layer 2 node index
+		* Bits 27 - 35 = Layer 3 node index
+		* Bits 36 - 44 = Layer 4 node index
+		* Bits 45 - 53 = Layer 5 node index
+		* Bits 54 - 62 = Layer 6 node index
 		*/
-		usize getInternalValue() const { return value; }
+		constexpr usize getInternalValue() const { return value; }
 
-		bool operator==(const TreeDepthIndices& other) const {
+		constexpr bool operator==(const TreeDepthIndices& other) const {
 			return value == other.value;
 		}
 
