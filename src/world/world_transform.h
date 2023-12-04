@@ -85,6 +85,10 @@ namespace world
 		constexpr void operator = (const u8 bitmask) {
 			facing = bitmask;
 		}
+		
+		constexpr void operator = (BlockFacing::Direction direction) {
+			facing = direction;
+		}
 
 		constexpr void operator = (const BlockFacing& other) {
 			facing = other.facing;
