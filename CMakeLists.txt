@@ -23,7 +23,7 @@ add_subdirectory ("dependencies/glfw-3.3.8")
 
 include_directories("dependencies/glm-0.9.9.8")
 
-include(dependencies/gk_types_lib_0.1/doctest_force_link_static_lib_in_target.cmake)
+#include(dependencies/gk_types_lib_0.1/doctest_force_link_static_lib_in_target.cmake)
 
 
 
