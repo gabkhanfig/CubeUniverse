@@ -16,7 +16,7 @@ project ("CubeUniverse")
 add_subdirectory ("src")
 # Dependencies
 add_subdirectory ("dependencies/luau-0.603")
-add_subdirectory ("dependencies/gk_types_lib_0.1")
+add_subdirectory ("dependencies/gk-types-lib-0.2")
 add_subdirectory ("dependencies/enet-1.3.17")
 add_subdirectory ("dependencies/glm-0.9.9.8/glm")
 add_subdirectory ("dependencies/glfw-3.3.8")
