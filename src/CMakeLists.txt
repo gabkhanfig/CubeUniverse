@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.12)
 
-add_executable (CubeUniverse "main.cpp" "world/n_tree/tree_index.cpp")
-add_executable (CubeUniverseTest "test.cpp" "world/n_tree/tree_index.cpp")
+add_executable (CubeUniverse "main.cpp" "world/n_tree/tree_index.cpp" "world/n_tree/tree.cpp" "world/n_tree/tree_layers.cpp" "world/world_transform.cpp" "world/chunk/chunk.cpp" "engine/types/light.cpp")
+add_executable (CubeUniverseTest "test.cpp" "world/n_tree/tree_index.cpp" "world/n_tree/tree.cpp" "world/n_tree/tree_layers.cpp" "world/world_transform.cpp" "world/chunk/chunk.cpp" "engine/types/light.cpp")
 
 target_compile_definitions(CubeUniverse PUBLIC
 	$<$<CONFIG:Debug>:CUBE_DEBUG GK_TYPES_LIB_DEBUG>

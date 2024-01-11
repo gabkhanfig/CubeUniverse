@@ -11,28 +11,51 @@
 
 #include <iostream>
 
+#include <lua.h>
+#include <luacode.h>
+#include <lualib.h>
+
+//int main() {
+//  glfwInit();
+//
+//  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+//  GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
+//
+//  uint32_t extensionCount = 0;
+//  vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+//
+//  std::cout << extensionCount << " extensions supported\n";
+//
+//  glm::mat4 matrix;
+//  glm::vec4 vec;
+//  auto test = matrix * vec;
+//
+//  while (!glfwWindowShouldClose(window)) {
+//    glfwPollEvents();
+//  }
+//
+//  glfwDestroyWindow(window);
+//
+//  glfwTerminate();
+//
+//  return 0;
+//}
+
 int main() {
-  glfwInit();
 
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
 
-  uint32_t extensionCount = 0;
-  vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+	int status, result;
+	lua_State* L;
+	L = luaL_newstate();
 
-  std::cout << extensionCount << " extensions supported\n";
+	luaL_openlibs(L);
+	size_t bytecodeSize = 0;
+	const char* source = "print(\"hello world!\")";
+	char* bytecode = luau_compile(source, strlen(source), NULL, &bytecodeSize);
+	int loadResult = luau_load(L, "test?", bytecode, bytecodeSize, 0);
+	free(bytecode);
 
-  glm::mat4 matrix;
-  glm::vec4 vec;
-  auto test = matrix * vec;
+	result = lua_pcall(L, 0, 0, 0);
 
-  while (!glfwWindowShouldClose(window)) {
-    glfwPollEvents();
-  }
 
-  glfwDestroyWindow(window);
-
-  glfwTerminate();
-
-  return 0;
 }
