@@ -1,5 +1,5 @@
 .{
-    .name = "CubeUniverseZig",
+    .name = "CubeUniverse",
     .version = "0.0.0",
     .paths = .{
         // This makes *all* files, recursively, included in this package. It is generally
