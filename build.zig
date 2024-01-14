@@ -1,6 +1,7 @@
 //! https://github.com/spanzeri/vkguide-zig/blob/main/build.zig
 // c:\Users\Admin\AppData\Roaming\Code\User\globalStorage\ziglang.vscode-zig\zig_install\zig.exe
 const std = @import("std");
+const LazyPath = std.Build.LazyPath;
 
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
@@ -16,10 +17,10 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const src_module = b.addModule("src", .{
-        .source_file = .{ .path = "src/root.zig" },
-    });
-    exe.addModule("src", src_module);
+    // const src_module = b.addModule("src", .{
+    //     .source_file = .{ .path = "src/root.zig" },
+    // });
+    // exe.addModule("src", src_module);
 
     // Add Vulkan dependency
     // The vulkan sdk is required to be installed, along with the VK_SDK_PATH environment variable to be set
@@ -31,13 +32,16 @@ pub fn build(b: *std.Build) void {
         exe.addIncludePath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/include", .{path}) catch @panic("Out of Memory") });
     }
 
-    const glfw_dep = b.dependency("mach_glfw", .{
-        .target = exe.target,
-        .optimize = exe.optimize,
-    });
-    exe.addModule("mach-glfw", glfw_dep.module("mach-glfw"));
-    @import("mach_glfw").link(glfw_dep.builder, exe);
+    exe.addLibraryPath(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib"));
+    exe.addIncludePath(LazyPath.relative("thirdparty/glfw-zig/zig-out/include"));
+    exe.addObjectFile(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib/glfw.lib"));
 
+    // see thirdparty/glfw-zig/build.zig
+    exe.linkSystemLibrary("gdi32");
+    exe.linkSystemLibrary("user32");
+    exe.linkSystemLibrary("shell32");
+
+    exe.linkLibC();
     exe.linkLibCpp();
 
     // This declares intent for the executable to be installed into the
@@ -73,7 +77,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    exe_unit_tests.addModule("src", src_module);
+    //exe_unit_tests.addModule("src", src_module);
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
 
@@ -83,45 +87,3 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
 }
-
-const c_flags = [_][]const u8{
-    // when compiling this lib in debug mode, it seems to add -fstack-protector so if you want to link it
-    // with an exe built with -Dtarget=x86_64-windows-msvc you need the line below or you'll get undefined symbols
-    "-fno-stack-protector",
-
-    // don't want to add some functions (__mingw_vsscanf etc.), also needed for building exe with msvc abi
-    "-D_STDIO_DEFINED",
-
-    // we're compiling for windows (https://github.com/glfw/glfw/blob/076bfd55be45e7ba5c887d4b32aa03d26881a1fb/src/glfw_config.h.in#L40) _GLFW_USE_CONFIG_H is used to get this define in cmake
-    "-D_GLFW_WIN32",
-    // added to windows builds (https://github.com/glfw/glfw/blob/076bfd55be45e7ba5c887d4b32aa03d26881a1fb/src/CMakeLists.txt#L144)
-    "-D_UNICODE",
-    "-DUNICODE",
-};
-
-const base_sources = [_][]const u8{
-    "context.c",
-    "egl_context.c",
-    "init.c",
-    "input.c",
-    "monitor.c",
-    "null_init.c",
-    "null_joystick.c",
-    "null_monitor.c",
-    "null_window.c",
-    "osmesa_context.c",
-    //"platform.c",
-    "vulkan.c",
-    "window.c",
-};
-
-const windows_sources = [_][]const u8{
-    "wgl_context.c",
-    "win32_init.c",
-    "win32_joystick.c",
-    //"win32_module.c",
-    "win32_monitor.c",
-    "win32_thread.c",
-    "win32_time.c",
-    "win32_window.c",
-};
