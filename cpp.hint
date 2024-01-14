@@ -1,7 +1,0 @@
-// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
-// such as names of functions and macros.
-// For more information see https://go.microsoft.com/fwlink/?linkid=865984
-#define ALIGN_AS(alignment) __declspec(align(alignment))
-#define ALIGN_AS alignas(alignment)
-#define comptime_test_case(test_case_name, test_name, test_block) consteval bool CompTimeTest_##test_case_name##_##test_name()##{ test_block return true; } static_assert(CompTimeTest_##test_case_name##_##test_name##());
-#define comptimeAssertEq(v1, v2) if(v1 != v2) throw;
