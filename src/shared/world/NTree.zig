@@ -38,7 +38,7 @@ pub fn init(allocator: Allocator) Allocator.Error!*Self {
 /// invalidating everything.
 /// Asserts that the NTree's `state` is `.treeModify`.
 pub fn deinit(self: *Self) void {
-    assert(self.state.load(AtomicOrder.Acquire) == .treeModify);
+    assert(self._state.load(AtomicOrder.Acquire) == .treeModify);
     self.topLayer.deinit();
     const allocator = self.allocator.*;
     allocator.destroy(self.allocator);
