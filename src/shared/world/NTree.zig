@@ -21,7 +21,7 @@ state: Atomic(State),
 allocator: *Allocator,
 topLayer: Layer,
 
-///
+/// Allocates a new NTree object, initializing it, and taking ownership of `allocator`.
 pub fn init(allocator: Allocator) Allocator.Error!*Self {
     const allocator_ptr = try allocator.create(Allocator);
     allocator_ptr.* = allocator;
@@ -32,7 +32,8 @@ pub fn init(allocator: Allocator) Allocator.Error!*Self {
     return tree;
 }
 
-///
+/// Calls deinit on all child nodes, and their children, freeing the memory for all chunks,
+/// invalidating everything.
 /// Asserts that the NTree's `state` is `.treeModify`.
 pub fn deinit(self: *Self) void {
     assert(self.state.load(AtomicOrder.Acquire) == .treeModify);
@@ -42,7 +43,7 @@ pub fn deinit(self: *Self) void {
     allocator.destroy(self);
 }
 
-/// Corresponds with Node union to make a tagged union,
+/// Corresponds with `Node` union to make a tagged union,
 /// but with the advantage of Struct of Arrays for SIMD operations on the tags.
 const NodeType = enum(i8) {
     empty,
@@ -52,6 +53,8 @@ const NodeType = enum(i8) {
     light,
 };
 
+/// Corresponds with `NodeType` enum to make a tagged union,
+/// but with the advantage of Struct of Arrays for SIMD operations on the tags.
 const Node = extern union {
     empty: usize,
     child: *Layer,
