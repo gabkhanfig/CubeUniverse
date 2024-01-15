@@ -114,7 +114,6 @@ pub const Inner = struct {
         // During `.chunkModifyOnly`, only the data within the chunk can be modified.
         // The actual tree nodes cannot be deleted.
         assert(self.tree.state() == .treeModify);
-        assert(self.tree.state.load(std.atomic.Ordering.Acquire) == .treeModify);
         const allocator = self.tree.allocator;
         self._blockStates.deinit();
         allocator.destroy(self);
