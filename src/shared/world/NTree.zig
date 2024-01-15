@@ -15,10 +15,11 @@ const AtomicOrder = std.builtin.AtomicOrder;
 
 const Self = @This();
 
+/// Do not access directly.
 /// Tracks the data modify state of the NTree. If `state` is `.chunkModifyOnly`, ONLY the data
 /// within a chunk can be modified. Any attempts to modify the nodes themselves, including insertion and deletion
 /// will crash the program.
-state: Atomic(State),
+_state: Atomic(State),
 allocator: *Allocator,
 topLayer: Layer,
 
@@ -27,7 +28,7 @@ pub fn init(allocator: Allocator) Allocator.Error!*Self {
     const allocator_ptr = try allocator.create(Allocator);
     allocator_ptr.* = allocator;
     const tree: *Self = try allocator_ptr.create(Self);
-    tree.state = Atomic(State).init(.treeModify);
+    tree._state = Atomic(State).init(.treeModify);
     tree.allocator = allocator_ptr;
     tree.topLayer = Layer.init(null, 0, 0, tree);
     return tree;
@@ -42,6 +43,18 @@ pub fn deinit(self: *Self) void {
     const allocator = self.allocator.*;
     allocator.destroy(self.allocator);
     allocator.destroy(self);
+}
+
+/// Atomically load the current state of the NTree. If `state` is `.chunkModifyOnly`, ONLY the data
+/// within a chunk can be modified. Any attempts to modify the nodes themselves,
+/// including insertion and deletion will crash the program.
+pub fn state(self: *const Self) State {
+    return self._state.load(AtomicOrder.Acquire);
+}
+
+pub fn setState(self: *Self, newState: State) void {
+    // TODO maybe compare exchange weak?
+    self._state.store(newState, AtomicOrder.Release);
 }
 
 /// Corresponds with `Node` union to make a tagged union,
@@ -113,7 +126,7 @@ const Layer = struct {
 };
 
 /// Track the state of tree data access
-const State = enum(u8) {
+const State = enum(usize) {
     /// Only the data within chunk nodes are allows to be modified, nothing else.
     chunkModifyOnly,
     /// All of the nodes can be modified, including deleting and inserting nodes / layers.
