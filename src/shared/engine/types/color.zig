@@ -1,4 +1,4 @@
-const RgbColor = packed struct {
+pub const RgbColor = packed struct {
     const Self = @This();
 
     r: u8,
