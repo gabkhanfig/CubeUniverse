@@ -9,8 +9,8 @@ const Allocator = std.mem.Allocator;
 const RwLock = std.Thread.RwLock;
 const TreeLayerIndices = @import("TreeLayerIndices.zig");
 const Chunk = @import("chunk/Chunk.zig");
-const Atomic = std.atomic.Atomic;
-const Ordering = std.atomic.Ordering;
+const Atomic = std.atomic.Value;
+const AtomicOrder = std.builtin.AtomicOrder;
 
 const Self = @This();
 
@@ -35,9 +35,11 @@ pub fn init(allocator: Allocator) Allocator.Error!*Self {
 ///
 /// Asserts that the NTree's `state` is `.treeModify`.
 pub fn deinit(self: *Self) void {
-    assert(self.state.load(Ordering.Acquire) == .treeModify);
+    assert(self.state.load(AtomicOrder.Acquire) == .treeModify);
     self.topLayer.deinit();
-    self.allocator.destroy(self.allocator);
+    const allocator = self.allocator.*;
+    allocator.destroy(self.allocator);
+    allocator.destroy(self);
 }
 
 /// Corresponds with Node union to make a tagged union,
@@ -113,3 +115,8 @@ const State = enum(u8) {
     /// All of the nodes can be modified, including deleting and inserting nodes / layers.
     treeModify,
 };
+
+test "init deinit NTree" {
+    var tree = try Self.init(std.testing.allocator);
+    tree.deinit();
+}

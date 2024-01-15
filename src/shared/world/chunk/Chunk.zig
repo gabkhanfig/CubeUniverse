@@ -44,9 +44,8 @@ pub fn deinit(self: *Self) void {
     lock.lock(); // TODO is this necessary? Chunks should only be destroyed at specific points with a frame, and may not require thread safety
     defer lock.unlock();
 
-    const allocator = self._inner._blockStates.allocator;
     self._inner._blockStates.deinit();
-    allocator.destroy(self);
+    self._inner.tree.allocator.destroy(self);
 }
 
 /// Get read-only access to the chunk's inner data.
@@ -121,10 +120,10 @@ pub const Inner = struct {
     }
 };
 
-// test "init deinit chunk inner" {
-//     const tree = try NTree.init(std.testing.allocator);
-//     defer tree.deinit();
+test "init deinit chunk inner" {
+    const tree = try NTree.init(std.testing.allocator);
+    defer tree.deinit();
 
-//     const chunk = try Self.init(tree, TreeLayerIndices.init(.{ 1, 2, 3, 4, 5, 6, 7 }));
-//     defer chunk.deinit();
-// }
+    const chunk = try Self.init(tree, TreeLayerIndices.init(.{ 1, 2, 3, 4, 5, 6, 7 }));
+    defer chunk.deinit();
+}
