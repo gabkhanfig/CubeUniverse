@@ -9,6 +9,7 @@ const Allocator = std.mem.Allocator;
 const RwLock = std.Thread.RwLock;
 const TreeLayerIndices = @import("TreeLayerIndices.zig");
 const Chunk = @import("chunk/Chunk.zig");
+const RgbColor = @import("../engine/types/color.zig").RgbColor;
 const Atomic = std.atomic.Value;
 const AtomicOrder = std.builtin.AtomicOrder;
 
@@ -59,7 +60,7 @@ const Node = extern union {
     empty: usize,
     child: *Layer,
     chunk: *Chunk,
-    color: usize, // TODO change this
+    color: RgbColor,
     light: usize, // TODO change this
 };
 
