@@ -59,13 +59,13 @@ pub fn build(b: *std.Build) void {
     // SDL2
     exe.addLibraryPath(LazyPath.relative("thirdparty/sdl/build/Release"));
     exe.addIncludePath(LazyPath.relative("thirdparty/sdl/include"));
-    exe.addObjectFile(LazyPath.relative("thirdparty/sdl/build/Release/SDL2.lib")); // TODO maybe dll?
-    // if (target.result.os.tag == .windows) {
-    //     b.installBinFile("thirdparty/sdl/build/Release/SDL2.dll", "SDL2.dll");
-    // } else {
-    //     b.installBinFile("thirdparty/sdl3/lib/libSDL2.so", "libSDL2.so.0");
-    //     exe.root_module.addRPathSpecial("$ORIGIN");
-    // }
+    exe.addObjectFile(LazyPath.relative("thirdparty/sdl/build/Release/SDL2.lib")); // ImGui needs this. Perhaps make ImGui a static library with SDL?
+    if (target.result.os.tag == .windows) {
+        b.installBinFile("thirdparty/sdl/build/Release/SDL2.dll", "SDL2.dll");
+    } else {
+        b.installBinFile("thirdparty/sdl3/lib/libSDL2.so", "libSDL2.so.0");
+        exe.root_module.addRPathSpecial("$ORIGIN");
+    }
 
     // imgui
     // https://github.com/dearimgui/dear_bindings?tab=readme-ov-file
