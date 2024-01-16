@@ -4,4 +4,5 @@ comptime {
     _ = @import("shared/world/NTree.zig");
     _ = @import("shared/engine/types/color.zig");
     _ = @import("shared/engine/types/light.zig");
+    _ = @import("shared/engine/types/job_system.zig");
 }
