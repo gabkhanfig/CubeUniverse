@@ -64,6 +64,16 @@ pub fn build(b: *std.Build) void {
     exe.addIncludePath(LazyPath.relative("thirdparty/stb"));
     exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/stb/stb_image.c"), .flags = &flags });
 
+    // SDL2
+    exe.addLibraryPath(LazyPath.relative("thirdparty/sdl/build/Release"));
+    exe.addIncludePath(LazyPath.relative("thirdparty/sdl/include"));
+    if (target.result.os.tag == .windows) {
+        b.installBinFile("thirdparty/sdl/build/Release/SDL2.dll", "SDL2.dll"); // TODO maybe static library?
+    } else {
+        b.installBinFile("thirdparty/sdl3/lib/libSDL2.so", "libSDL2.so.0");
+        exe.root_module.addRPathSpecial("$ORIGIN");
+    }
+
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
