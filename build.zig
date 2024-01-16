@@ -56,6 +56,10 @@ pub fn build(b: *std.Build) void {
     imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
     exe.root_module.addImport("imgui", imgui);
 
+    // vma
+    exe.addIncludePath(LazyPath.relative("thirdparty/vma"));
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/vma/vk_mem_alloc.cpp"), .flags = &flags });
+
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
