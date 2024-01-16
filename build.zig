@@ -46,6 +46,16 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     exe.linkLibCpp();
 
+    //imgui
+    const imgui = b.addModule("imgui", .{ .root_source_file = LazyPath.relative("thirdparty/imgui/zig_imgui.zig") });
+    const flags = [_][]const u8{};
+    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_demo.cpp"), .flags = &flags });
+    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_draw.cpp"), .flags = &flags });
+    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_tables.cpp"), .flags = &flags });
+    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_widgets.cpp"), .flags = &flags });
+    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
+    exe.root_module.addImport("imgui", imgui);
+
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).

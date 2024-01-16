@@ -1,5 +1,6 @@
 const std = @import("std");
 const c = @import("clibs.zig");
+const imgui = @import("imgui");
 
 pub fn main() !void {
     if (c.glfwInit() == c.GLFW_FALSE) {
