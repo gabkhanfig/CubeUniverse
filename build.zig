@@ -46,15 +46,7 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     exe.linkLibCpp();
 
-    //imgui
-    const imgui = b.addModule("imgui", .{ .root_source_file = LazyPath.relative("thirdparty/imgui/zig_imgui.zig") });
     const flags = [_][]const u8{};
-    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_demo.cpp"), .flags = &flags });
-    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_draw.cpp"), .flags = &flags });
-    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_tables.cpp"), .flags = &flags });
-    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_widgets.cpp"), .flags = &flags });
-    imgui.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
-    exe.root_module.addImport("imgui", imgui);
 
     // vma
     exe.addIncludePath(LazyPath.relative("thirdparty/vma"));
@@ -67,12 +59,39 @@ pub fn build(b: *std.Build) void {
     // SDL2
     exe.addLibraryPath(LazyPath.relative("thirdparty/sdl/build/Release"));
     exe.addIncludePath(LazyPath.relative("thirdparty/sdl/include"));
-    if (target.result.os.tag == .windows) {
-        b.installBinFile("thirdparty/sdl/build/Release/SDL2.dll", "SDL2.dll"); // TODO maybe static library?
-    } else {
-        b.installBinFile("thirdparty/sdl3/lib/libSDL2.so", "libSDL2.so.0");
-        exe.root_module.addRPathSpecial("$ORIGIN");
-    }
+    exe.addObjectFile(LazyPath.relative("thirdparty/sdl/build/Release/SDL2.lib")); // TODO maybe dll?
+    // if (target.result.os.tag == .windows) {
+    //     b.installBinFile("thirdparty/sdl/build/Release/SDL2.dll", "SDL2.dll");
+    // } else {
+    //     b.installBinFile("thirdparty/sdl3/lib/libSDL2.so", "libSDL2.so.0");
+    //     exe.root_module.addRPathSpecial("$ORIGIN");
+    // }
+
+    // imgui
+    // https://github.com/dearimgui/dear_bindings?tab=readme-ov-file
+    //const imgui = b.addModule("imgui", .{ .root_source_file = LazyPath.relative("thirdparty/imgui/zig_imgui.zig") });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_demo.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_draw.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_tables.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_widgets.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/imgui_impl_sdlrenderer2.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/imgui_impl_vulkan.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/cimgui.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/cimgui_impl_sdlrenderer2.cpp"), .flags = &flags });
+    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/cimgui_impl_vulkan.cpp"), .flags = &flags });
+    //exe.root_module.addImport("imgui", imgui);
+    // imgui.linkSystemLibrary(vk_lib_name);
+    // if (b.env_map.get("VK_SDK_PATH")) |path| {
+    //     imgui.addLibraryPath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/lib", .{path}) catch @panic("Out of Memory") });
+    //     imgui.addIncludePath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/include", .{path}) catch @panic("Out of Memory") });
+    // }
+    // imgui.addIncludePath(LazyPath.relative("thirdparty/sdl/include"));
+    // imgui.addLibraryPath(LazyPath.relative("thirdparty/sdl/build/Release"));
+    // imgui.addObjectFile(LazyPath.relative("thirdparty/sdl/build/Release/SDL2.lib"));
+    // imgui.addIncludePath(LazyPath.relative("thirdparty/imgui"));
+    exe.addIncludePath(LazyPath.relative("thirdparty/imgui"));
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default

@@ -3,4 +3,5 @@ pub usingnamespace @cImport({
     @cInclude("GLFW/glfw3.h");
     @cInclude("vk_mem_alloc.h");
     @cInclude("stb_image.h");
+    @cInclude("cimgui.h");
 });
