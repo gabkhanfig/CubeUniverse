@@ -31,6 +31,8 @@ pub fn build(b: *std.Build) void {
         exe.addLibraryPath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/lib", .{path}) catch @panic("Out of Memory") });
         exe.addIncludePath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/include", .{path}) catch @panic("Out of Memory") });
     }
+    // to add a module, do this
+    //exe.root_module.addImport("module name", module);
 
     exe.addLibraryPath(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib"));
     exe.addIncludePath(LazyPath.relative("thirdparty/glfw-zig/zig-out/include"));
