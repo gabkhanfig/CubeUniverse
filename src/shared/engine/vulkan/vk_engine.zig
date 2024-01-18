@@ -6,22 +6,27 @@ const assert = std.debug.assert;
 const sdl_vk = @cImport({
     @cInclude("SDL_vulkan.h");
 });
+const ArrayList = std.ArrayList;
 
 // https://github.com/AndreVallestero/sdl-vulkan-tutorial/blob/master/hello-triangle/main.cpp
+// https://vkguide.dev/docs/new_chapter_1/vulkan_init_code/
+// https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Validation_layers
+// https://github.com/spanzeri/vkguide-zig/blob/main/src/vulkan_init.zig
 
 var loadedEngine: ?*VulkanEngine = null;
 
 pub const VulkanEngine = struct {
     const Self = @This();
 
-    isInitialized: bool = false,
-    frameNumber: i32 = 0,
-    stopRendering: bool = false,
-    windowExtent: c.VkExtent2D = .{ .width = 1700, .height = 900 },
+    isInitialized: bool,
+    frameNumber: i32,
+    stopRendering: bool,
+    windowExtent: c.VkExtent2D,
     window: *c.SDL_Window,
 
     instance: c.VkInstance,
-    surface: c.VkSurfaceKHR,
+
+    enableValidationLayers: bool,
 
     pub fn get() *VulkanEngine {
         if (loadedEngine == null) {
@@ -38,7 +43,7 @@ pub const VulkanEngine = struct {
         const windowFlags = @as(c.SDL_WindowFlags, c.SDL_WINDOW_VULKAN);
 
         var window: *c.SDL_Window = undefined;
-        if (c.SDL_CreateWindow("Vulkan Engine", c.SDL_WINDOWPOS_UNDEFINED, c.SDL_WINDOWPOS_UNDEFINED, 1700, 900, windowFlags)) |w| {
+        if (c.SDL_CreateWindow("Vulkan Engine", c.SDL_WINDOWPOS_UNDEFINED, c.SDL_WINDOWPOS_UNDEFINED, 1920, 1080, windowFlags)) |w| {
             window = w;
         } else {
             @panic("Failed to create SDL window");
@@ -50,6 +55,7 @@ pub const VulkanEngine = struct {
         vkEngine.stopRendering = false;
         vkEngine.windowExtent = .{ .width = 1700, .height = 900 };
         vkEngine.window = window;
+        vkEngine.enableValidationLayers = true;
 
         vkEngine.createInstance();
 
@@ -113,28 +119,14 @@ pub const VulkanEngine = struct {
         appInfo.engineVersion = c.VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = c.VK_API_VERSION_1_3;
 
-        //assert(sdl_vk.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, &sdlExtensions) == c.SDL_TRUE);
-        var sdlExtensionCount: u32 = 0;
-        _ = sdl_vk.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, null);
-        std.debug.print("\nextension count: {}\n", .{sdlExtensionCount});
-        const sdlExtensions = std.heap.page_allocator.alloc([*c]const u8, sdlExtensionCount) catch unreachable;
-        defer std.heap.page_allocator.free(sdlExtensions);
-        _ = sdl_vk.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, sdlExtensions.ptr);
-
-        var requiredExtensions = std.ArrayList([*c]const u8).init(std.heap.page_allocator);
+        const requiredExtensions = self.getRequiredExtensions();
         defer requiredExtensions.deinit();
-        for (sdlExtensions) |extension| {
-            std.debug.print("found extension: {s}\n", .{extension});
-            requiredExtensions.append(extension) catch unreachable;
-        }
-        requiredExtensions.append(c.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) catch unreachable;
 
         var validationLayers = std.ArrayList([*c]const u8).init(std.heap.page_allocator);
         defer validationLayers.deinit();
         validationLayers.append("VK_LAYER_KHRONOS_validation") catch unreachable;
 
-        const enableValidationLayers = true;
-        if (enableValidationLayers and !checkValidationLayerSupport(validationLayers)) {
+        if (self.enableValidationLayers and !checkValidationLayerSupport(validationLayers)) {
             @panic("validation layers requested, but not available!");
         }
 
@@ -145,7 +137,7 @@ pub const VulkanEngine = struct {
         createInfo.ppEnabledExtensionNames = requiredExtensions.items.ptr;
         createInfo.flags |= @intCast(c.VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR);
 
-        if (enableValidationLayers) {
+        if (self.enableValidationLayers) {
             createInfo.enabledLayerCount = @intCast(validationLayers.items.len);
             createInfo.ppEnabledLayerNames = validationLayers.items.ptr;
         } else {
@@ -181,5 +173,28 @@ pub const VulkanEngine = struct {
         }
 
         return true;
+    }
+
+    fn getRequiredExtensions(self: *Self) ArrayList([*c]const u8) {
+        var requiredExtensions = std.ArrayList([*c]const u8).init(std.heap.page_allocator);
+
+        var sdlExtensionCount: u32 = 0;
+        _ = sdl_vk.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, null);
+        std.debug.print("\nextension count: {}\n", .{sdlExtensionCount});
+        const sdlExtensions = std.heap.page_allocator.alloc([*c]const u8, sdlExtensionCount) catch unreachable;
+        defer std.heap.page_allocator.free(sdlExtensions);
+        _ = sdl_vk.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, sdlExtensions.ptr);
+
+        for (sdlExtensions) |extension| {
+            std.debug.print("found extension: {s}\n", .{extension});
+            requiredExtensions.append(extension) catch unreachable;
+        }
+        if (self.enableValidationLayers) {
+            requiredExtensions.append(c.VK_EXT_DEBUG_UTILS_EXTENSION_NAME) catch unreachable;
+        }
+
+        requiredExtensions.append(c.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) catch unreachable;
+
+        return requiredExtensions;
     }
 };
