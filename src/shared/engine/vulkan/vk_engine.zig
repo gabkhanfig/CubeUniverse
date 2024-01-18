@@ -10,7 +10,7 @@ const ArrayList = std.ArrayList;
 
 // https://github.com/AndreVallestero/sdl-vulkan-tutorial/blob/master/hello-triangle/main.cpp
 // https://vkguide.dev/docs/new_chapter_1/vulkan_init_code/
-// https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Validation_layers
+// https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Physical_devices_and_queue_families
 // https://github.com/spanzeri/vkguide-zig/blob/main/src/vulkan_init.zig
 
 var loadedEngine: ?*VulkanEngine = null;
@@ -24,10 +24,13 @@ pub const VulkanEngine = struct {
     windowExtent: c.VkExtent2D,
     window: *c.SDL_Window,
 
+    enableValidationLayers: bool,
+
     instance: c.VkInstance,
     debugMessenger: c.VkDebugUtilsMessengerEXT,
-
-    enableValidationLayers: bool,
+    chosenGpu: c.VkPhysicalDevice,
+    device: c.VkDevice,
+    surface: c.VkSurfaceKHR,
 
     pub fn get() *VulkanEngine {
         if (loadedEngine == null) {
@@ -60,6 +63,7 @@ pub const VulkanEngine = struct {
 
         vkEngine.createInstance();
         vkEngine.setupDebugMessenger();
+        vkEngine.selectPhysicalDevice();
 
         loadedEngine = vkEngine;
     }
@@ -269,5 +273,101 @@ pub const VulkanEngine = struct {
         }
 
         return c.VK_FALSE;
+    }
+
+    fn selectPhysicalDevice(self: *Self) void {
+        var physicalDeviceCount: u32 = undefined;
+        vkCheck(c.vkEnumeratePhysicalDevices(self.instance, &physicalDeviceCount, null));
+        if (physicalDeviceCount == 0) {
+            @panic("Failed to find GPUs with Vulkan support!");
+        }
+
+        const physicalDevices = std.heap.page_allocator.alloc(c.VkPhysicalDevice, physicalDeviceCount) catch unreachable;
+        defer std.heap.page_allocator.free(physicalDevices);
+
+        vkCheck(c.vkEnumeratePhysicalDevices(self.instance, &physicalDeviceCount, physicalDevices.ptr));
+        self.chosenGpu = pickPhysicalDevice(physicalDevices);
+    }
+
+    fn pickPhysicalDevice(physicalDevices: []c.VkPhysicalDevice) c.VkPhysicalDevice {
+        var scores = ArrayList(u32).init(std.heap.page_allocator);
+        defer scores.deinit();
+
+        for (physicalDevices) |physicalDevice| {
+            scores.append(rateDeviceSuitability(physicalDevice)) catch unreachable;
+        }
+
+        var optimalIndex: u32 = 0;
+        var optimalScore: u32 = 0;
+        var i: u32 = 0;
+        for (scores.items) |score| {
+            if (score > optimalScore) {
+                optimalScore = score;
+                optimalIndex = i;
+            }
+            i += 1;
+        }
+
+        if (optimalScore == 0) {
+            @panic("Failed to find suitable Vulkan gpu");
+        }
+
+        return physicalDevices[optimalIndex];
+    }
+
+    fn rateDeviceSuitability(device: c.VkPhysicalDevice) u32 {
+        var deviceProperties: c.VkPhysicalDeviceProperties = .{};
+        var deviceFeatures: c.VkPhysicalDeviceFeatures = .{};
+        c.vkGetPhysicalDeviceProperties(device, &deviceProperties);
+        c.vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+        var score: u32 = 0;
+
+        if (deviceFeatures.geometryShader == 0) {
+            return 0;
+        }
+
+        const indices = QueueFamilyIndices.findQueueFamilies(device);
+        if (indices.graphicsFamily == null) {
+            std.debug.print("null graphics family\n", .{});
+            return 0;
+        }
+
+        if (deviceProperties.deviceType == c.VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            score += 1000;
+        }
+
+        score += deviceProperties.limits.maxImageDimension2D;
+        return score;
+    }
+};
+
+const QueueFamilyIndices = struct {
+    const Self = @This();
+
+    graphicsFamily: ?u32,
+
+    fn findQueueFamilies(device: c.VkPhysicalDevice) Self {
+        var queueFamilyCount: u32 = 0;
+        c.vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, null);
+
+        const allocator = std.heap.page_allocator;
+        const queueFamilies = allocator.alloc(c.VkQueueFamilyProperties, queueFamilyCount) catch unreachable;
+        defer allocator.free(queueFamilies);
+
+        c.vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.ptr);
+
+        var indices: Self = .{ .graphicsFamily = null };
+
+        var i: u32 = 0;
+        for (queueFamilies) |queueFamily| {
+            if (queueFamily.queueCount & c.VK_QUEUE_GRAPHICS_BIT != 0) {
+                indices.graphicsFamily = i;
+                break;
+            }
+            i += 1;
+        }
+
+        return indices;
     }
 };
