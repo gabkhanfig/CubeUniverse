@@ -25,6 +25,7 @@ pub const VulkanEngine = struct {
     window: *c.SDL_Window,
 
     instance: c.VkInstance,
+    debugMessenger: c.VkDebugUtilsMessengerEXT,
 
     enableValidationLayers: bool,
 
@@ -58,6 +59,7 @@ pub const VulkanEngine = struct {
         vkEngine.enableValidationLayers = true;
 
         vkEngine.createInstance();
+        vkEngine.setupDebugMessenger();
 
         loadedEngine = vkEngine;
     }
@@ -70,6 +72,7 @@ pub const VulkanEngine = struct {
 
         const vkEngine = loadedEngine.?;
 
+        vkEngine.destroyDebugMessenger();
         c.vkDestroyInstance(vkEngine.instance, null);
         c.SDL_DestroyWindow(loadedEngine.?.window);
         std.heap.page_allocator.destroy(vkEngine);
@@ -145,7 +148,7 @@ pub const VulkanEngine = struct {
         }
 
         vkCheck(c.vkCreateInstance(&createInfo, null, &self.instance));
-        std.debug.print("created vulkan instance\n", .{});
+        std.debug.print("Created vulkan instance\n", .{});
     }
 
     fn checkValidationLayerSupport(validationLayers: std.ArrayList([*c]const u8)) bool {
@@ -175,6 +178,49 @@ pub const VulkanEngine = struct {
         return true;
     }
 
+    /// Does nothing if `enableValidationLayers` is false.
+    fn setupDebugMessenger(self: *Self) void {
+        if (!self.enableValidationLayers) return;
+
+        var createInfo: c.VkDebugUtilsMessengerCreateInfoEXT = .{};
+        createInfo.sType = c.VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity = @intCast(c.VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | c.VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | c.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT);
+        createInfo.messageType = @intCast(c.VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | c.VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | c.VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT);
+        createInfo.pfnUserCallback = Self.debugCallback;
+        createInfo.pUserData = null; // optional?
+
+        const createFnOpt = self.getVulkanInstanceFunc(c.PFN_vkCreateDebugUtilsMessengerEXT, "vkCreateDebugUtilsMessengerEXT");
+        if (createFnOpt) |createFn| {
+            vkCheck(createFn(self.instance, &createInfo, null, &self.debugMessenger));
+            std.debug.print("Created vulkan debug messenger\n", .{});
+            return;
+        }
+
+        @panic("setupDebugMessenger failed??");
+    }
+
+    /// Does nothing if `enableValidationLayers` is false.
+    fn destroyDebugMessenger(self: *Self) void {
+        if (!self.enableValidationLayers) return;
+
+        const destroyFnOpt = self.getVulkanInstanceFunc(c.PFN_vkDestroyDebugUtilsMessengerEXT, "vkDestroyDebugUtilsMessengerEXT");
+        if (destroyFnOpt) |destroyFn| {
+            destroyFn(self.instance, self.debugMessenger, null);
+            return;
+        }
+
+        @panic("Failed to destroy vulkan debug messenger");
+    }
+
+    fn getVulkanInstanceFunc(self: *Self, comptime Fn: type, name: [*c]const u8) Fn {
+        const getProcAddr: c.PFN_vkGetInstanceProcAddr = @ptrCast(sdl_vk.SDL_Vulkan_GetVkGetInstanceProcAddr());
+        if (getProcAddr) |getProcAddrFunc| {
+            return @ptrCast(getProcAddrFunc(self.instance, name));
+        }
+
+        @panic("SDL_Vulkan_GetVkGetInstanceProcAddr returned null");
+    }
+
     fn getRequiredExtensions(self: *Self) ArrayList([*c]const u8) {
         var requiredExtensions = std.ArrayList([*c]const u8).init(std.heap.page_allocator);
 
@@ -196,5 +242,32 @@ pub const VulkanEngine = struct {
         requiredExtensions.append(c.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) catch unreachable;
 
         return requiredExtensions;
+    }
+
+    fn debugCallback(messageSeverity: c.VkDebugUtilsMessageSeverityFlagBitsEXT, messageType: c.VkDebugUtilsMessageTypeFlagsEXT, pCallbackData: ?*const c.VkDebugUtilsMessengerCallbackDataEXT, _: ?*anyopaque) callconv(.C) c.VkBool32 {
+        const severityStr = switch (messageSeverity) {
+            c.VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT => "verbose",
+            c.VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT => "info",
+            c.VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT => "warning",
+            c.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT => "error",
+            else => "unknown",
+        };
+
+        const typeStr = switch (messageType) {
+            c.VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT => "general",
+            c.VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT => "validation",
+            c.VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT => "performance",
+            c.VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT => "device address",
+            else => "unknown",
+        };
+
+        const message: [*c]const u8 = if (pCallbackData) |callbackData| callbackData.pMessage else "NO MESSAGE!";
+        std.log.err("Vulkan validation layer:\n\t[{s}][{s}] Message:\n\t{s}\n", .{ severityStr, typeStr, message });
+
+        if (messageSeverity >= c.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+            @panic("Unrecoverable vulkan error occurred");
+        }
+
+        return c.VK_FALSE;
     }
 };
