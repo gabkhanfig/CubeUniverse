@@ -30,6 +30,7 @@ pub const VulkanEngine = struct {
     debugMessenger: c.VkDebugUtilsMessengerEXT,
     chosenGpu: c.VkPhysicalDevice,
     device: c.VkDevice,
+    graphicsQueue: c.VkQueue,
     surface: c.VkSurfaceKHR,
 
     pub fn get() *VulkanEngine {
@@ -57,13 +58,14 @@ pub const VulkanEngine = struct {
         vkEngine.isInitialized = true;
         vkEngine.frameNumber = 0;
         vkEngine.stopRendering = false;
-        vkEngine.windowExtent = .{ .width = 1700, .height = 900 };
+        vkEngine.windowExtent = .{ .width = 1920, .height = 1080 };
         vkEngine.window = window;
         vkEngine.enableValidationLayers = true;
 
         vkEngine.createInstance();
         vkEngine.setupDebugMessenger();
         vkEngine.selectPhysicalDevice();
+        vkEngine.createLogicalDevice();
 
         loadedEngine = vkEngine;
     }
@@ -76,6 +78,7 @@ pub const VulkanEngine = struct {
 
         const vkEngine = loadedEngine.?;
 
+        c.vkDestroyDevice(vkEngine.device, null);
         vkEngine.destroyDebugMessenger();
         c.vkDestroyInstance(vkEngine.instance, null);
         c.SDL_DestroyWindow(loadedEngine.?.window);
@@ -129,9 +132,8 @@ pub const VulkanEngine = struct {
         const requiredExtensions = self.getRequiredExtensions();
         defer requiredExtensions.deinit();
 
-        var validationLayers = std.ArrayList([*c]const u8).init(std.heap.page_allocator);
+        const validationLayers = getValidationLayers();
         defer validationLayers.deinit();
-        validationLayers.append("VK_LAYER_KHRONOS_validation") catch unreachable;
 
         if (self.enableValidationLayers and !checkValidationLayerSupport(validationLayers)) {
             @panic("validation layers requested, but not available!");
@@ -180,6 +182,12 @@ pub const VulkanEngine = struct {
         }
 
         return true;
+    }
+
+    fn getValidationLayers() ArrayList([*c]const u8) {
+        var validationLayers = std.ArrayList([*c]const u8).init(std.heap.page_allocator);
+        validationLayers.append("VK_LAYER_KHRONOS_validation") catch unreachable;
+        return validationLayers;
     }
 
     /// Does nothing if `enableValidationLayers` is false.
@@ -339,6 +347,39 @@ pub const VulkanEngine = struct {
 
         score += deviceProperties.limits.maxImageDimension2D;
         return score;
+    }
+
+    fn createLogicalDevice(self: *Self) void {
+        const indices = QueueFamilyIndices.findQueueFamilies(self.chosenGpu);
+
+        // https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Logical_device_and_queues#:~:text=queueCreateInfo.pQueuePriorities%20%3D%20%26queuePriority%3B-,Specifying%20used%20device%20features,-The%20next%20information
+        const deviceFeatures: c.VkPhysicalDeviceFeatures = .{};
+
+        var queuePriority: f32 = 1.0;
+        var queueCreateInfo: c.VkDeviceQueueCreateInfo = .{};
+        queueCreateInfo.sType = @intCast(c.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
+        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.?;
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+
+        const validationLayers = getValidationLayers();
+        defer validationLayers.deinit();
+
+        var createInfo: c.VkDeviceCreateInfo = .{};
+        createInfo.sType = @intCast(c.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
+        createInfo.pQueueCreateInfos = &queueCreateInfo;
+        createInfo.queueCreateInfoCount = 1;
+        createInfo.pEnabledFeatures = &deviceFeatures;
+
+        if (self.enableValidationLayers) {
+            createInfo.enabledLayerCount = @intCast(validationLayers.items.len);
+            createInfo.ppEnabledLayerNames = validationLayers.items.ptr;
+        } else {
+            createInfo.enabledLayerCount = 0;
+        }
+
+        vkCheck(c.vkCreateDevice(self.chosenGpu, &createInfo, null, &self.device));
+        c.vkGetDeviceQueue(self.device, indices.graphicsFamily.?, 0, &self.graphicsQueue);
     }
 };
 
