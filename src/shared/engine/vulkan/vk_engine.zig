@@ -3,9 +3,6 @@ const c = @import("../../../clibs.zig");
 const vk_types = @import("vk_types.zig");
 const vkCheck = vk_types.vkCheck;
 const assert = std.debug.assert;
-const sdl_vk = @cImport({
-    @cInclude("SDL_vulkan.h");
-});
 const ArrayList = std.ArrayList;
 
 // https://github.com/AndreVallestero/sdl-vulkan-tutorial/blob/master/hello-triangle/main.cpp
@@ -225,7 +222,7 @@ pub const VulkanEngine = struct {
     }
 
     fn getVulkanInstanceFunc(self: *Self, comptime Fn: type, name: [*c]const u8) Fn {
-        const getProcAddr: c.PFN_vkGetInstanceProcAddr = @ptrCast(sdl_vk.SDL_Vulkan_GetVkGetInstanceProcAddr());
+        const getProcAddr: c.PFN_vkGetInstanceProcAddr = @ptrCast(c.SDL_Vulkan_GetVkGetInstanceProcAddr());
         if (getProcAddr) |getProcAddrFunc| {
             return @ptrCast(getProcAddrFunc(self.instance, name));
         }
@@ -237,11 +234,11 @@ pub const VulkanEngine = struct {
         var requiredExtensions = std.ArrayList([*c]const u8).init(std.heap.page_allocator);
 
         var sdlExtensionCount: u32 = 0;
-        _ = sdl_vk.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, null);
+        _ = c.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, null);
         std.debug.print("\nextension count: {}\n", .{sdlExtensionCount});
         const sdlExtensions = std.heap.page_allocator.alloc([*c]const u8, sdlExtensionCount) catch unreachable;
         defer std.heap.page_allocator.free(sdlExtensions);
-        _ = sdl_vk.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, sdlExtensions.ptr);
+        _ = c.SDL_Vulkan_GetInstanceExtensions(@ptrCast(self.window), &sdlExtensionCount, sdlExtensions.ptr);
 
         for (sdlExtensions) |extension| {
             std.debug.print("found extension: {s}\n", .{extension});
