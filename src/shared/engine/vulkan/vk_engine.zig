@@ -7,7 +7,7 @@ const ArrayList = std.ArrayList;
 
 // https://github.com/AndreVallestero/sdl-vulkan-tutorial/blob/master/hello-triangle/main.cpp
 // https://vkguide.dev/docs/new_chapter_1/vulkan_init_code/
-// https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Physical_devices_and_queue_families
+// https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Window_surface
 // https://github.com/spanzeri/vkguide-zig/blob/main/src/vulkan_init.zig
 
 var loadedEngine: ?*VulkanEngine = null;
@@ -61,6 +61,7 @@ pub const VulkanEngine = struct {
 
         vkEngine.createInstance();
         vkEngine.setupDebugMessenger();
+        vkEngine.createSurface();
         vkEngine.selectPhysicalDevice();
         vkEngine.createLogicalDevice();
 
@@ -77,6 +78,7 @@ pub const VulkanEngine = struct {
 
         c.vkDestroyDevice(vkEngine.device, null);
         vkEngine.destroyDebugMessenger();
+        c.vkDestroySurfaceKHR(vkEngine.instance, vkEngine.surface, null);
         c.vkDestroyInstance(vkEngine.instance, null);
         c.SDL_DestroyWindow(loadedEngine.?.window);
         std.heap.page_allocator.destroy(vkEngine);
@@ -377,6 +379,13 @@ pub const VulkanEngine = struct {
 
         vkCheck(c.vkCreateDevice(self.chosenGpu, &createInfo, null, &self.device));
         c.vkGetDeviceQueue(self.device, indices.graphicsFamily.?, 0, &self.graphicsQueue);
+    }
+
+    fn createSurface(self: *Self) void {
+        const res = c.SDL_Vulkan_CreateSurface(self.window, self.instance, &self.surface);
+        if (res != @as(c_uint, c.SDL_TRUE)) {
+            @panic("Failed to create window surface!");
+        }
     }
 };
 
