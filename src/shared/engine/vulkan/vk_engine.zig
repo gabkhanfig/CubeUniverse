@@ -29,6 +29,7 @@ pub const VulkanEngine = struct {
     device: c.VkDevice,
     graphicsQueue: c.VkQueue,
     surface: c.VkSurfaceKHR,
+    presentQueue: c.VkQueue,
 
     pub fn get() *VulkanEngine {
         if (loadedEngine == null) {
@@ -349,25 +350,45 @@ pub const VulkanEngine = struct {
     }
 
     fn createLogicalDevice(self: *Self) void {
+        var generalPurposeAllocator = std.heap.GeneralPurposeAllocator(.{}){};
+        const gpa = generalPurposeAllocator.allocator();
+
         const indices = QueueFamilyIndices.findQueueFamilies(self.chosenGpu, self.surface);
 
         // https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Logical_device_and_queues#:~:text=queueCreateInfo.pQueuePriorities%20%3D%20%26queuePriority%3B-,Specifying%20used%20device%20features,-The%20next%20information
         const deviceFeatures: c.VkPhysicalDeviceFeatures = .{};
 
+        var uniqueQueueFamilies = ArrayList(u32).init(gpa);
+        defer uniqueQueueFamilies.deinit();
+
+        uniqueQueueFamilies.append(indices.graphicsFamily.?) catch unreachable;
+        // for more queues, this should iterate through the ArrayList, seeing if it contains the value.
+        // alternatively, a set would work. Maybe custom implemention or eventual zig std implementation?
+        if (indices.presentFamily.? == indices.graphicsFamily.?) {
+            uniqueQueueFamilies.append(indices.presentFamily.?) catch unreachable;
+        }
+
+        var queueCreateInfos = ArrayList(c.VkDeviceQueueCreateInfo).init(gpa);
+        defer queueCreateInfos.deinit();
+
         var queuePriority: f32 = 1.0;
-        var queueCreateInfo: c.VkDeviceQueueCreateInfo = .{};
-        queueCreateInfo.sType = @intCast(c.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
-        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.?;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
+        for (uniqueQueueFamilies.items) |queueFamily| {
+            var queueCreateInfo: c.VkDeviceQueueCreateInfo = .{};
+            queueCreateInfo.sType = c.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.queueFamilyIndex = queueFamily;
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &queuePriority;
+
+            queueCreateInfos.append(queueCreateInfo) catch unreachable;
+        }
 
         const validationLayers = getValidationLayers();
         defer validationLayers.deinit();
 
         var createInfo: c.VkDeviceCreateInfo = .{};
         createInfo.sType = @intCast(c.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
-        createInfo.pQueueCreateInfos = &queueCreateInfo;
-        createInfo.queueCreateInfoCount = 1;
+        createInfo.pQueueCreateInfos = queueCreateInfos.items.ptr;
+        createInfo.queueCreateInfoCount = @intCast(queueCreateInfos.items.len);
         createInfo.pEnabledFeatures = &deviceFeatures;
 
         if (self.enableValidationLayers) {
