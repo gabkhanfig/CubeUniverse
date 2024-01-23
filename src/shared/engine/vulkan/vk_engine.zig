@@ -293,15 +293,15 @@ pub const VulkanEngine = struct {
         defer std.heap.page_allocator.free(physicalDevices);
 
         vkCheck(c.vkEnumeratePhysicalDevices(self.instance, &physicalDeviceCount, physicalDevices.ptr));
-        self.chosenGpu = pickPhysicalDevice(physicalDevices);
+        self.chosenGpu = pickPhysicalDevice(physicalDevices, self.surface);
     }
 
-    fn pickPhysicalDevice(physicalDevices: []c.VkPhysicalDevice) c.VkPhysicalDevice {
+    fn pickPhysicalDevice(physicalDevices: []c.VkPhysicalDevice, surface: c.VkSurfaceKHR) c.VkPhysicalDevice {
         var scores = ArrayList(u32).init(std.heap.page_allocator);
         defer scores.deinit();
 
         for (physicalDevices) |physicalDevice| {
-            scores.append(rateDeviceSuitability(physicalDevice)) catch unreachable;
+            scores.append(rateDeviceSuitability(physicalDevice, surface)) catch unreachable;
         }
 
         var optimalIndex: u32 = 0;
@@ -322,7 +322,7 @@ pub const VulkanEngine = struct {
         return physicalDevices[optimalIndex];
     }
 
-    fn rateDeviceSuitability(device: c.VkPhysicalDevice) u32 {
+    fn rateDeviceSuitability(device: c.VkPhysicalDevice, surface: c.VkSurfaceKHR) u32 {
         var deviceProperties: c.VkPhysicalDeviceProperties = .{};
         var deviceFeatures: c.VkPhysicalDeviceFeatures = .{};
         c.vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -334,7 +334,7 @@ pub const VulkanEngine = struct {
             return 0;
         }
 
-        const indices = QueueFamilyIndices.findQueueFamilies(device);
+        const indices = QueueFamilyIndices.findQueueFamilies(device, surface);
         if (indices.graphicsFamily == null) {
             std.debug.print("null graphics family\n", .{});
             return 0;
@@ -349,7 +349,7 @@ pub const VulkanEngine = struct {
     }
 
     fn createLogicalDevice(self: *Self) void {
-        const indices = QueueFamilyIndices.findQueueFamilies(self.chosenGpu);
+        const indices = QueueFamilyIndices.findQueueFamilies(self.chosenGpu, self.surface);
 
         // https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Logical_device_and_queues#:~:text=queueCreateInfo.pQueuePriorities%20%3D%20%26queuePriority%3B-,Specifying%20used%20device%20features,-The%20next%20information
         const deviceFeatures: c.VkPhysicalDeviceFeatures = .{};
@@ -393,8 +393,9 @@ const QueueFamilyIndices = struct {
     const Self = @This();
 
     graphicsFamily: ?u32,
+    presentFamily: ?u32,
 
-    fn findQueueFamilies(device: c.VkPhysicalDevice) Self {
+    fn findQueueFamilies(device: c.VkPhysicalDevice, surface: c.VkSurfaceKHR) Self {
         var queueFamilyCount: u32 = 0;
         c.vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, null);
 
@@ -404,17 +405,29 @@ const QueueFamilyIndices = struct {
 
         c.vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.ptr);
 
-        var indices: Self = .{ .graphicsFamily = null };
+        var indices: Self = .{ .graphicsFamily = null, .presentFamily = null };
 
         var i: u32 = 0;
         for (queueFamilies) |queueFamily| {
-            if (queueFamily.queueCount & c.VK_QUEUE_GRAPHICS_BIT != 0) {
+            if (queueFamily.queueCount & c.VK_QUEUE_GRAPHICS_BIT != 0 and indices.graphicsFamily == null) {
                 indices.graphicsFamily = i;
-                break;
             }
+
+            if (indices.presentFamily == null) {
+                var presentSupport: c.VkBool32 = @as(c.VkBool32, 0);
+                vkCheck(c.vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport));
+                if (presentSupport == c.VK_TRUE) {
+                    indices.presentFamily = i;
+                }
+            }
+
             i += 1;
         }
 
         return indices;
+    }
+
+    fn isComplete(self: Self) bool {
+        return self.graphicsFamily != null and self.presentFamily != null;
     }
 };
