@@ -302,6 +302,9 @@ pub const VulkanEngine = struct {
         defer scores.deinit();
 
         for (physicalDevices) |physicalDevice| {
+            if (!isDeviceSuitable(physicalDevice, surface)) {
+                continue;
+            }
             scores.append(rateDeviceSuitability(physicalDevice, surface)) catch unreachable;
         }
 
@@ -321,6 +324,22 @@ pub const VulkanEngine = struct {
         }
 
         return physicalDevices[optimalIndex];
+    }
+
+    fn isDeviceSuitable(physicalDevice: c.VkPhysicalDevice, surface: c.VkSurfaceKHR) bool {
+        const indices = QueueFamilyIndices.findQueueFamilies(physicalDevice, surface);
+
+        var deviceProperties: c.VkPhysicalDeviceProperties = .{};
+        var deviceFeatures: c.VkPhysicalDeviceFeatures = .{};
+        c.vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+        c.vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
+
+        var deviceExtensions = getDeviceExtensions();
+        defer deviceExtensions.deinit();
+
+        const hasGeomtryShader = deviceFeatures.geometryShader == c.VK_TRUE;
+
+        return hasGeomtryShader and indices.isComplete() and checkDeviceExtensionSupport(physicalDevice);
     }
 
     fn rateDeviceSuitability(device: c.VkPhysicalDevice, surface: c.VkSurfaceKHR) u32 {
@@ -385,11 +404,16 @@ pub const VulkanEngine = struct {
         const validationLayers = getValidationLayers();
         defer validationLayers.deinit();
 
+        const deviceExtensions = getDeviceExtensions();
+        defer deviceExtensions.deinit();
+
         var createInfo: c.VkDeviceCreateInfo = .{};
         createInfo.sType = @intCast(c.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
         createInfo.pQueueCreateInfos = queueCreateInfos.items.ptr;
         createInfo.queueCreateInfoCount = @intCast(queueCreateInfos.items.len);
         createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.enabledExtensionCount = @intCast(deviceExtensions.items.len);
+        createInfo.ppEnabledExtensionNames = deviceExtensions.items.ptr;
 
         if (self.enableValidationLayers) {
             createInfo.enabledLayerCount = @intCast(validationLayers.items.len);
@@ -452,3 +476,41 @@ const QueueFamilyIndices = struct {
         return self.graphicsFamily != null and self.presentFamily != null;
     }
 };
+
+/// Required physical device extensions as unique entries. Currently  just swapchain.
+fn getDeviceExtensions() ArrayList([*:0]const u8) {
+    //var generalPurposeAllocator = std.heap.GeneralPurposeAllocator(.{}){};
+    //const gpa = generalPurposeAllocator.allocator();
+    const allocator = std.heap.page_allocator;
+
+    var deviceExtensions = ArrayList([*:0]const u8).init(allocator);
+    deviceExtensions.append(c.VK_KHR_SWAPCHAIN_EXTENSION_NAME) catch unreachable;
+    return deviceExtensions;
+}
+
+fn checkDeviceExtensionSupport(device: c.VkPhysicalDevice) bool {
+    var extensionCount: u32 = 0;
+    vkCheck(c.vkEnumerateDeviceExtensionProperties(device, null, &extensionCount, null));
+
+    const allocator = std.heap.page_allocator;
+    //const sdlExtensions = std.heap.page_allocator.alloc([*c]const u8, sdlExtensionCount) catch unreachable;
+    //defer std.heap.page_allocator.free(sdlExtensions);
+    const availableExtensions = allocator.alloc(c.VkExtensionProperties, extensionCount) catch unreachable;
+    defer allocator.free(availableExtensions);
+    vkCheck(c.vkEnumerateDeviceExtensionProperties(device, null, &extensionCount, availableExtensions.ptr));
+
+    var deviceExtensions = getDeviceExtensions();
+    for (availableExtensions) |extension| {
+        const extensionName = std.mem.sliceTo(@as([*:0]const u8, @ptrCast(&extension.extensionName)), 0);
+
+        for (0..deviceExtensions.items.len) |i| {
+            const requiredExtensionName = std.mem.sliceTo(deviceExtensions.items[i], 0);
+            if (std.mem.eql(u8, extensionName, requiredExtensionName)) {
+                _ = deviceExtensions.orderedRemove(i);
+                break;
+            }
+        }
+    }
+
+    return deviceExtensions.items.len == 0;
+}
