@@ -8,122 +8,136 @@ const Allocator = std.mem.Allocator;
 const assert = std.debug.assert;
 const expect = std.testing.expect;
 const BlockLight = @import("../../engine/types/light.zig").BlockLight;
+const DEBUG = std.debug.runtime_safety;
 
-pub const CHUNK_LENGTH = world_transform.CHUNK_LENGTH;
-pub const CHUNK_SIZE = world_transform.CHUNK_SIZE;
+/// Owns `CHUNK_SIZE` blocks within, and uses an RwLock for multithread access.
+/// This struct simply contains the inner data, which must be accessed through either
+/// calling `read()`, `tryRead()`, `write()`, or `tryWrite()`.
+pub const Chunk = extern struct {
+    const Self = @This();
 
-const Self = @This();
+    pub const CHUNK_LENGTH = world_transform.CHUNK_LENGTH;
+    pub const CHUNK_SIZE = world_transform.CHUNK_SIZE;
 
-/// Do not access directly
-_lock: RwLock,
-/// Do not access directly
-_inner: Inner,
+    pub const Inner = @import("chunk_inner.zig");
 
-/// Create a new Chunk instance using `allocator`.
-/// If allocation fails, returns an error.
-pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
-    var chunkMem = try tree.allocator.create(Self);
-    chunkMem._lock = .{};
-    chunkMem._inner = Inner{
-        ._blockStateIds = .{0} ** CHUNK_SIZE,
-        ._light = .{BlockLight.init(0, 0, 0)} ** CHUNK_SIZE,
-        ._blockStates = ArrayList(usize).init(tree.allocator.*),
-        .tree = tree,
-        .treePos = treePos,
-    };
-    try chunkMem._inner._blockStates.append(0);
-    return chunkMem;
-}
+    inner: *anyopaque,
 
-/// Will assert that the owning `NTree`'s state is set to `.treeModify`.
-/// Acquire exclusive ownership of this chunk, and free all memory associated with it.
-/// It's extremely important that no thread is attempting to get access to this chunk,
-/// because it will be completely invalidated.
-pub fn deinit(self: *Self) void {
-    var lock = self._lock;
-    lock.lock(); // TODO is this necessary? Chunks should only be destroyed at specific points with a frame, and may not require thread safety
-    defer lock.unlock();
+    // /// Do not access directly
+    // _lock: RwLock,
+    // /// Do not access directly
+    // _inner: Inner,
 
-    self._inner._blockStates.deinit();
-    self._inner.tree.allocator.destroy(self);
-}
+    /// Create a new Chunk instance using `allocator`.
+    /// If allocation fails, returns an error.
+    pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!Self {
+        const newInner = try tree.allocator.create(Inner);
+        newInner.* = Inner{
+            ._lock = .{},
+            ._blockStateIds = .{0} ** CHUNK_SIZE,
+            ._light = .{BlockLight.init(0, 0, 0)} ** CHUNK_SIZE,
+            ._blockStates = ArrayList(usize).init(tree.allocator.*),
+            .tree = tree,
+            .treePos = treePos,
+        };
 
-/// Get read-only access to the chunk's inner data.
-/// Will wait until no thread has exclusive access to the lock.
-/// Call `unlockRead()` when done.
-pub fn read(self: *const Self) *const Inner {
-    self._lock.lockShared();
-    return &self._inner;
-}
-
-/// Try to get read-only access to the chunk's inner data.
-/// Returns either the chunk data, or an error if another thread has exclusive access to the lock.
-/// Call `unlockRead()` when done.
-pub fn tryRead(self: *const Self) !*const Inner {
-    if (self._lock.tryLockShared()) {
-        return &self._inner;
+        return Self{ .inner = @ptrCast(newInner) };
     }
-    return error{Locked};
-}
 
-/// Get read-write access to the chunk's inner data.
-/// Will wait until no thread has exclusive or shared access to the lock.
-/// Call `unlockWrite()` when done.
-pub fn write(self: *Self) *Inner {
-    self._lock.lock();
-    return &self._inner;
-}
-
-/// Try to get read-write access to the chunk's inner data.
-/// Returns either the chunk data, or an error if another thread has exclusive or shared access to the lock.
-/// Call `unlockWrite()` when done.
-pub fn tryWrite(self: *Self) !*Inner {
-    if (self._lock.tryLock()) {
-        return &self._inner;
+    /// Will assert that the owning `NTree`'s state is set to `.treeModify`.
+    /// Acquire exclusive ownership of this chunk, and free all memory associated with it.
+    /// It's extremely important that no thread is attempting to get access to this chunk,
+    /// because it will be completely invalidated.
+    pub fn deinit(self: *Self) void {
+        const innerPtr = self.getInnerPtrMut(); // maybe lock?
+        innerPtr.deinit();
     }
-    return error{Locked};
-}
 
-/// Revoke shared access to this chunk's inner data.
-/// It is undefined behaviour to continue to access the data after unlocking.
-pub fn unlockRead(self: *const Self) void {
-    self._lock.unlockShared();
-}
+    /// Get read-only access to the chunk's inner data.
+    /// Will wait until no thread has exclusive access to the lock.
+    /// Call `unlockRead()` when done.
+    pub fn read(self: *const Self) *const Inner {
+        const innerPtr = self.getInnerPtr();
+        innerPtr._lock.lockShared();
+        return innerPtr;
+    }
 
-/// Revoke exclusive access to this chunk's inner data.
-/// It is undefined behaviour to continue to access the data after unlocking.
-pub fn unlockWrite(self: *Self) void {
-    self._lock.unlock();
-}
+    /// Try to get read-only access to the chunk's inner data.
+    /// Returns either the chunk data, or an error if another thread has exclusive access to the lock.
+    /// Call `unlockRead()` when done.
+    pub fn tryRead(self: *const Self) !*const Inner {
+        const innerPtr = self.getInnerPtr();
+        if (innerPtr._lock.tryLockShared()) {
+            return innerPtr;
+        }
+        return error{Locked};
+    }
 
-pub const Inner = struct {
-    /// Do not access directly
-    _blockStateIds: [CHUNK_SIZE]u16 align(64),
-    /// Do not access directly
-    _light: [CHUNK_SIZE]BlockLight align(64),
-    /// Do not access directly
-    _blockStates: ArrayList(usize),
-    /// Allows immediately going to the head of the tree that owns this chunk,
-    /// checking the state, and getting the allocator.
-    tree: *NTree,
-    /// Position of this chunk within the NTree.
-    /// Should not be ever modified.
-    treePos: TreeLayerIndices,
+    /// Get read-write access to the chunk's inner data.
+    /// Will wait until no thread has exclusive or shared access to the lock.
+    /// Call `unlockWrite()` when done.
+    pub fn write(self: *Self) *Inner {
+        const innerPtr = self.getInnerPtrMut();
+        innerPtr._lock.lock();
+        return innerPtr;
+    }
 
-    fn deinit(self: *Inner) void {
-        // During `.chunkModifyOnly`, only the data within the chunk can be modified.
-        // The actual tree nodes cannot be deleted.
-        assert(self.tree.state() == .treeModify);
-        const allocator = self.tree.allocator;
-        self._blockStates.deinit();
-        allocator.destroy(self);
+    /// Try to get read-write access to the chunk's inner data.
+    /// Returns either the chunk data, or an error if another thread has exclusive or shared access to the lock.
+    /// Call `unlockWrite()` when done.
+    pub fn tryWrite(self: *Self) !*Inner {
+        const innerPtr = self.getInnerPtrMut();
+        if (innerPtr._lock.tryLock()) {
+            return innerPtr;
+        }
+        return error{Locked};
+    }
+
+    /// Revoke shared access to this chunk's inner data.
+    /// It is undefined behaviour to continue to access the data after unlocking.
+    pub fn unlockRead(self: *const Self) void {
+        const innerPtr = self.getInnerPtrMut();
+        innerPtr._lock.unlockShared();
+    }
+
+    /// Revoke exclusive access to this chunk's inner data.
+    /// It is undefined behaviour to continue to access the data after unlocking.
+    pub fn unlockWrite(self: *Self) void {
+        const innerPtr = self.getInnerPtrMut();
+        innerPtr._lock.unlock();
+    }
+
+    ///
+    pub fn unsafeRead(self: *const Self) *const Inner {
+        if (comptime DEBUG) {
+            if (self.tryRead()) |chunkInner| {
+                defer self.unlockRead();
+                return chunkInner;
+            } else |_| {
+                @panic("Chunk currently has exclusive access. Cannot read without locking.");
+            }
+        } else {
+            return self.getInnerPtr();
+        }
+    }
+
+    /// Get the chunk's inner data immutably.
+    fn getInnerPtr(self: *const Self) *const Inner {
+        return @ptrCast(@alignCast(self.inner));
+    }
+
+    /// Get the chunk's inner data mutably.
+    fn getInnerPtrMut(self: *Self) *Inner {
+        return @ptrCast(@alignCast(self.inner));
     }
 };
+
+// Tests
 
 test "init deinit chunk inner" {
     const tree = try NTree.init(std.testing.allocator);
     defer tree.deinit();
 
-    const chunk = try Self.init(tree, TreeLayerIndices.init(.{ 1, 2, 3, 4, 5, 6, 7 }));
+    var chunk = try Chunk.init(tree, TreeLayerIndices.init(.{ 1, 2, 3, 4, 5, 6, 7 }));
     defer chunk.deinit();
 }

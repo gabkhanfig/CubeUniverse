@@ -8,7 +8,7 @@ const expect = std.testing.expect;
 const Allocator = std.mem.Allocator;
 const RwLock = std.Thread.RwLock;
 const TreeLayerIndices = @import("TreeLayerIndices.zig");
-const Chunk = @import("chunk/Chunk.zig");
+const Chunk = @import("chunk/chunk.zig").Chunk;
 const RgbColor = @import("../engine/types/color.zig").RgbColor;
 const Atomic = std.atomic.Value;
 const AtomicOrder = std.builtin.AtomicOrder;
@@ -72,7 +72,7 @@ const NodeType = enum(i8) {
 const Node = extern union {
     empty: usize,
     child: *Layer,
-    chunk: *Chunk,
+    chunk: Chunk,
     color: RgbColor,
     light: usize, // TODO change this
 };
