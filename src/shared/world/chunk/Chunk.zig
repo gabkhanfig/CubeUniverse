@@ -23,11 +23,6 @@ pub const Chunk = extern struct {
 
     inner: *anyopaque,
 
-    // /// Do not access directly
-    // _lock: RwLock,
-    // /// Do not access directly
-    // _inner: Inner,
-
     /// Create a new Chunk instance using `allocator`.
     /// If allocation fails, returns an error.
     pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!Self {
@@ -107,7 +102,10 @@ pub const Chunk = extern struct {
         innerPtr._lock.unlock();
     }
 
-    ///
+    /// Get readonly access to the chunk's inner data in a way that does not require locking.
+    /// In `Debug` and `ReleaseSafe`, checks that no other thread has exclusive access.
+    /// Panics if a thread has exclusive access.
+    /// In `ReleaseFast` and `ReleaseSmall`, these checks are disabled.
     pub fn unsafeRead(self: *const Self) *const Inner {
         if (comptime DEBUG) {
             if (self.tryRead()) |chunkInner| {
