@@ -1,6 +1,9 @@
 //! Structure representing the entire world state.
 //! It's similar to an octree, but instead of being 2x2x2, it's
 //! `TREE_NODE_LENGTH` * `TREE_NODE_LENGTH` * `TREE_NODE_LENGTH`.
+//! NTree instance's will always have a consistent memory address,
+//! so storing a reference to it's allocator is safe, as long as the
+//! reference's lifetime does not exceed the lifetime of the NTree.
 
 const std = @import("std");
 const assert = std.debug.assert;
@@ -20,16 +23,16 @@ const Self = @This();
 /// within a chunk can be modified. Any attempts to modify the nodes themselves, including insertion and deletion
 /// will crash the program.
 _state: Atomic(State),
-allocator: *Allocator,
+/// Has a consistent memory address, so as long as the lifetime of the reference does not live
+/// past the lifetime of the NTree, storing a reference to this allocator is safe.
+allocator: Allocator,
 topLayer: Layer,
 
 /// Allocates a new NTree object, initializing it, and taking ownership of `allocator`.
 pub fn init(allocator: Allocator) Allocator.Error!*Self {
-    const allocator_ptr = try allocator.create(Allocator);
-    allocator_ptr.* = allocator;
-    const tree: *Self = try allocator_ptr.create(Self);
+    const tree: *Self = try allocator.create(Self);
     tree._state = Atomic(State).init(.treeModify);
-    tree.allocator = allocator_ptr;
+    tree.allocator = allocator;
     tree.topLayer = Layer.init(null, 0, 0, tree);
     return tree;
 }
@@ -40,8 +43,7 @@ pub fn init(allocator: Allocator) Allocator.Error!*Self {
 pub fn deinit(self: *Self) void {
     assert(self._state.load(AtomicOrder.Acquire) == .treeModify);
     self.topLayer.deinit();
-    const allocator = self.allocator.*;
-    allocator.destroy(self.allocator);
+    const allocator = self.allocator;
     allocator.destroy(self);
 }
 
