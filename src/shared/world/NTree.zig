@@ -133,6 +133,15 @@ const State = enum(usize) {
     treeModify,
 };
 
+test "Node size and align" {
+    try expect(@sizeOf(Node) == 8);
+    try expect(@alignOf(Node) == 8);
+}
+
+test "Layer align" {
+    try expect(@alignOf(Layer) == 64);
+}
+
 test "init deinit NTree" {
     var tree = try Self.init(std.testing.allocator);
     tree.deinit();

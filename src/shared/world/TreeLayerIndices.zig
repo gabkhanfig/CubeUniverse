@@ -96,9 +96,9 @@ test "tree layer indices random" {
     const layers = Self.init(.{ 1, 65, 100, Self.TREE_NODES_PER_LAYER - 1, 10, 40, 50 });
     try expect(layers.indexAtLayer(0) == 1);
     try expect(layers.indexAtLayer(1) == 65);
-    //try expect(layers.indexAtLayer(2) == 100);
-    // try expect(layers.indexAtLayer(3) == TREE_NODES_PER_LAYER - 1);
-    // try expect(layers.indexAtLayer(4) == 10);
-    // try expect(layers.indexAtLayer(5) == 40);
-    // try expect(layers.indexAtLayer(6) == 50);
+    try expect(layers.indexAtLayer(2) == 100);
+    try expect(layers.indexAtLayer(3) == TREE_NODES_PER_LAYER - 1);
+    try expect(layers.indexAtLayer(4) == 10);
+    try expect(layers.indexAtLayer(5) == 40);
+    try expect(layers.indexAtLayer(6) == 50);
 }

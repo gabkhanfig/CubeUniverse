@@ -1,4 +1,6 @@
 //! Contains the inner data of a chunk.
+//! Is wrapped within a `Chunk` structure, providing multithreaded
+//! safe access to this inner data.
 
 const std = @import("std");
 const world_transform = @import("../world_transform.zig");
@@ -12,8 +14,8 @@ const expect = std.testing.expect;
 const BlockLight = @import("../../engine/types/light.zig").BlockLight;
 
 const Chunk = @import("chunk.zig").Chunk;
-const CHUNK_LENGTH = Chunk.CHUNK_LENGTH;
-const CHUNK_SIZE = Chunk.CHUNK_SIZE;
+const CHUNK_LENGTH = world_transform.CHUNK_LENGTH;
+const CHUNK_SIZE = world_transform.CHUNK_SIZE;
 
 // TODO use actual future implementation of BlockState type. BlockState will also track the block's break state.
 const BlockState = usize;
@@ -36,8 +38,6 @@ _blockStatesCapacity: u16,
 
 // there is space for 4 bytes due to padding
 
-/// Do not access directly
-//_blockStates: ArrayList(usize),
 /// DO NOT MODIFY, but can access directly.
 /// Allows immediately going to the head of the tree that owns this chunk,
 /// checking the state, and getting the allocator.
