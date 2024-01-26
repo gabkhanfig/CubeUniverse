@@ -26,16 +26,7 @@ pub const Chunk = extern struct {
     /// Create a new Chunk instance using `allocator`.
     /// If allocation fails, returns an error.
     pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!Self {
-        const newInner = try tree.allocator.create(Inner);
-        newInner.* = Inner{
-            ._lock = .{},
-            ._blockStateIds = .{0} ** CHUNK_SIZE,
-            ._light = .{BlockLight.init(0, 0, 0)} ** CHUNK_SIZE,
-            ._blockStates = ArrayList(usize).init(tree.allocator.*),
-            .tree = tree,
-            .treePos = treePos,
-        };
-
+        const newInner = try Inner.init(tree, treePos);
         return Self{ .inner = @ptrCast(newInner) };
     }
 
