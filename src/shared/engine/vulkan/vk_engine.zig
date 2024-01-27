@@ -4,10 +4,11 @@ const vk_types = @import("vk_types.zig");
 const vkCheck = vk_types.vkCheck;
 const assert = std.debug.assert;
 const ArrayList = std.ArrayList;
+const Allocator = std.mem.Allocator;
 
 // https://github.com/AndreVallestero/sdl-vulkan-tutorial/blob/master/hello-triangle/main.cpp
 // https://vkguide.dev/docs/new_chapter_1/vulkan_init_code/
-// https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Window_surface
+// https://vulkan-tutorial.com/en/Drawing_a_triangle/Presentation/Swap_chain
 // https://github.com/spanzeri/vkguide-zig/blob/main/src/vulkan_init.zig
 
 var loadedEngine: ?*VulkanEngine = null;
@@ -338,8 +339,17 @@ pub const VulkanEngine = struct {
         defer deviceExtensions.deinit();
 
         const hasGeomtryShader = deviceFeatures.geometryShader == c.VK_TRUE;
+        const extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
 
-        return hasGeomtryShader and indices.isComplete() and checkDeviceExtensionSupport(physicalDevice);
+        var swapChainAdequate = false;
+        if (extensionsSupported) {
+            const swapChainSupport = SwapChainSupportDetails.querySwapChainSupport(physicalDevice, surface);
+            defer swapChainSupport.deinit();
+
+            swapChainAdequate = swapChainSupport.formats != null and swapChainSupport.presentModes != null;
+        }
+
+        return hasGeomtryShader and indices.isComplete() and extensionsSupported and swapChainAdequate;
     }
 
     fn rateDeviceSuitability(device: c.VkPhysicalDevice, surface: c.VkSurfaceKHR) u32 {
@@ -514,3 +524,46 @@ fn checkDeviceExtensionSupport(device: c.VkPhysicalDevice) bool {
 
     return deviceExtensions.items.len == 0;
 }
+
+const SwapChainSupportDetails = struct {
+    capabilities: c.VkSurfaceCapabilitiesKHR = .{},
+    formats: ?[]c.VkSurfaceFormatKHR = null,
+    presentModes: ?[]c.VkPresentModeKHR = null,
+    allocator: Allocator,
+
+    /// Must call `deinit()` to free the allocations.
+    fn querySwapChainSupport(device: c.VkPhysicalDevice, surface: c.VkSurfaceKHR) SwapChainSupportDetails {
+        const allocator = std.heap.page_allocator;
+
+        var details: SwapChainSupportDetails = .{ .allocator = allocator };
+
+        vkCheck(c.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities));
+
+        var formatCount: u32 = undefined;
+        vkCheck(c.vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, null));
+
+        if (formatCount != 0) {
+            details.formats = details.allocator.alloc(c.VkSurfaceFormatKHR, formatCount) catch unreachable;
+            vkCheck(c.vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.?.ptr));
+        }
+
+        var presentModeCount: u32 = undefined;
+        vkCheck(c.vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, null));
+
+        if (presentModeCount != 0) {
+            details.presentModes = details.allocator.alloc(c.VkPresentModeKHR, presentModeCount) catch unreachable;
+            vkCheck(c.vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.?.ptr));
+        }
+
+        return details;
+    }
+
+    fn deinit(self: SwapChainSupportDetails) void {
+        if (self.formats != null) {
+            self.allocator.free(self.formats.?);
+        }
+        if (self.presentModes != null) {
+            self.allocator.free(self.presentModes.?);
+        }
+    }
+};
