@@ -80,7 +80,6 @@ pub fn deinit(self: *Self) void {
     blockStatesSlice.ptr = self._blockStatesData;
     blockStatesSlice.len = self._blockStatesCapacity;
     allocator.free(blockStatesSlice);
-    //self._blockStates.deinit();
     allocator.destroy(self);
 }
 
@@ -95,4 +94,12 @@ test "Size and Align" {
     // const sizeOfBlockStateIds = @sizeOf(u16) * CHUNK_SIZE;
     // const sizeOfLights = @sizeOf(BlockLight) * CHUNK_SIZE;
     try expect(@sizeOf(Self) == 131200);
+}
+
+test "Init deinit" {
+    const tree = try NTree.init(std.testing.allocator);
+    defer tree.deinit();
+
+    const inner = try Self.init(tree, TreeLayerIndices.init(.{ 0, 0, 0, 0, 0, 0, 0 }));
+    inner.deinit();
 }
