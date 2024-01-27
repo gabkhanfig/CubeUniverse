@@ -55,7 +55,7 @@ pub fn state(self: *const Self) State {
 }
 
 pub fn setState(self: *Self, newState: State) void {
-    // TODO maybe compare exchange weak?
+    // TODO maybe compare exchange weak? Since this is a single atomic operation, it's likely fine
     self._state.store(newState, AtomicOrder.Release);
 }
 
