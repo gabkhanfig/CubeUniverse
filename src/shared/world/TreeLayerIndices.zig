@@ -66,6 +66,10 @@ pub fn equal(self: Self, other: Self) bool {
     return self.value == other.value;
 }
 
+pub fn hash(self: Self) usize {
+    return self.value;
+}
+
 fn calculateTotalNodeLength() comptime_int {
     var currentVal = TREE_NODE_LENGTH;
     for (0..TREE_LAYERS) |_| {
