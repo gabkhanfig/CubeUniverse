@@ -6,4 +6,5 @@ comptime {
     _ = @import("shared/engine/types/color.zig");
     _ = @import("shared/engine/types/light.zig");
     _ = @import("shared/engine/types/job_system.zig");
+    _ = @import("shared/world/n_tree/LoadedChunksHashMap.zig");
 }
