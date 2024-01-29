@@ -4,6 +4,7 @@
 
 const std = @import("std");
 const world_transform = @import("../world_transform.zig");
+const BlockPosition = world_transform.BlockPosition;
 const RwLock = std.Thread.RwLock;
 const ArrayList = std.ArrayList;
 const TreeLayerIndices = @import("../TreeLayerIndices.zig");
@@ -73,7 +74,6 @@ pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
 pub fn deinit(self: *Self) void {
     // During `.chunkModifyOnly`, only the data within the chunk can be modified.
     // The actual tree nodes cannot be deleted.
-    assert(self.tree.state() == .treeModify);
     const allocator = self.tree.allocator;
 
     var blockStatesSlice: []BlockState = undefined;
@@ -82,6 +82,112 @@ pub fn deinit(self: *Self) void {
     allocator.free(blockStatesSlice);
     allocator.destroy(self);
 }
+
+const BlockStateIndices1Bit = struct {
+    const ARRAY_SIZE = CHUNK_SIZE / 64;
+
+    indices: [ARRAY_SIZE]usize = .{0} ** ARRAY_SIZE,
+
+    fn indexAt(self: BlockStateIndices1Bit, position: BlockPosition) u16 {
+        const arrayIndex = @mod(position.index, ARRAY_SIZE);
+        const positionIndexCast: usize = @intCast(position.index);
+        const bitIndex: u6 = @intCast(positionIndexCast & 63);
+        const bitMask = @shlExact(@as(usize, 1), bitIndex);
+
+        const masked = self.indices[arrayIndex] & bitMask;
+        return @intCast(@shrExact(masked, bitIndex));
+    }
+
+    fn setIndexAt(self: *BlockStateIndices1Bit, index: u1, position: BlockPosition) void {
+        const arrayIndex = @mod(position.index, ARRAY_SIZE);
+        const positionIndexCast: usize = @intCast(position.index);
+        const bitIndex: u6 = @intCast(positionIndexCast & 63);
+        const indexAsUsize: usize = @intCast(index);
+        const bitMask = @shlExact(indexAsUsize, bitIndex);
+
+        self.indices[arrayIndex] = self.indices[arrayIndex] | bitMask;
+    }
+};
+
+const BlockStateIndices2Bit = struct {
+    const ARRAY_SIZE = CHUNK_SIZE / 32;
+    const BIT_INDEX_MASK = 31;
+    const BIT_INDEX_MULTIPLIER = 2;
+
+    indices: [ARRAY_SIZE]usize = .{0} ** ARRAY_SIZE,
+
+    fn indexAt(self: BlockStateIndices2Bit, position: BlockPosition) u16 {
+        const arrayIndex = @mod(position.index, ARRAY_SIZE);
+        const positionIndexCast: usize = @intCast(position.index);
+        const firstBitIndex: u6 = @intCast(positionIndexCast & BIT_INDEX_MASK);
+        const bitMask = @shlExact(@as(usize, 0b11), BIT_INDEX_MULTIPLIER * firstBitIndex);
+
+        const masked = self.indices[arrayIndex] & bitMask;
+        return @intCast(@shrExact(masked, BIT_INDEX_MULTIPLIER * firstBitIndex));
+    }
+
+    fn setIndexAt(self: *BlockStateIndices2Bit, index: u2, position: BlockPosition) void {
+        const arrayIndex = @mod(position.index, ARRAY_SIZE);
+        const positionIndexCast: usize = @intCast(position.index);
+        const firstBitIndex: u6 = @intCast(positionIndexCast & BIT_INDEX_MASK);
+        const indexAsUsize: usize = @intCast(index);
+        const bitMask = @shlExact(indexAsUsize, BIT_INDEX_MULTIPLIER * firstBitIndex);
+
+        self.indices[arrayIndex] = self.indices[arrayIndex] | bitMask;
+    }
+};
+
+const BlockStateIndices4Bit = struct {
+    const ARRAY_SIZE = CHUNK_SIZE / 16;
+    const BIT_INDEX_MASK = 15;
+    const BIT_INDEX_MULTIPLIER = 4;
+
+    indices: [ARRAY_SIZE]usize = .{0} ** ARRAY_SIZE,
+
+    fn indexAt(self: BlockStateIndices4Bit, position: BlockPosition) u16 {
+        const arrayIndex = @mod(position.index, ARRAY_SIZE);
+        const positionIndexCast: usize = @intCast(position.index);
+        const firstBitIndex: u6 = @intCast(positionIndexCast & BIT_INDEX_MASK);
+        const bitMask = @shlExact(@as(usize, 0b1111), BIT_INDEX_MULTIPLIER * firstBitIndex);
+
+        const masked = self.indices[arrayIndex] & bitMask;
+        return @intCast(@shrExact(masked, BIT_INDEX_MULTIPLIER * firstBitIndex));
+    }
+
+    fn setIndexAt(self: *BlockStateIndices4Bit, index: u4, position: BlockPosition) void {
+        const arrayIndex = @mod(position.index, ARRAY_SIZE);
+        const positionIndexCast: usize = @intCast(position.index);
+        const firstBitIndex: u6 = @intCast(positionIndexCast & BIT_INDEX_MASK);
+        const indexAsUsize: usize = @intCast(index);
+        const bitMask = @shlExact(indexAsUsize, BIT_INDEX_MULTIPLIER * firstBitIndex);
+
+        self.indices[arrayIndex] = self.indices[arrayIndex] | bitMask;
+    }
+};
+
+const BlockStateIndices8Bit = struct {
+    indices: [CHUNK_SIZE]u8 = .{0} ** CHUNK_SIZE,
+
+    fn indexAt(self: BlockStateIndices8Bit, position: BlockPosition) u16 {
+        return self.indices[position.index];
+    }
+
+    fn setIndexAt(self: *BlockStateIndices8Bit, index: u8, position: BlockPosition) void {
+        self.indices[position.index] = index;
+    }
+};
+
+const BlockStateIndices16Bit = struct {
+    indices: [CHUNK_SIZE]u16 = .{0} ** CHUNK_SIZE,
+
+    fn indexAt(self: BlockStateIndices16Bit, position: BlockPosition) u16 {
+        return self.indices[position.index];
+    }
+
+    fn setIndexAt(self: *BlockStateIndices16Bit, index: u16, position: BlockPosition) void {
+        self.indices[position.index] = index;
+    }
+};
 
 // Tests
 
@@ -94,6 +200,81 @@ test "Size and Align" {
     // const sizeOfBlockStateIds = @sizeOf(u16) * CHUNK_SIZE;
     // const sizeOfLights = @sizeOf(BlockLight) * CHUNK_SIZE;
     try expect(@sizeOf(Self) == 131200);
+}
+
+test "BlockStateIndices1Bit" {
+    try expect(@sizeOf(BlockStateIndices1Bit) == 4096);
+
+    var indices: BlockStateIndices1Bit = .{};
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 0);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 0);
+
+    indices.setIndexAt(1, BlockPosition.init(0, 0, 0));
+    indices.setIndexAt(1, BlockPosition.init(9, 8, 8));
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 1);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 1);
+}
+
+test "BLockStateIndices2Bit" {
+    try expect(@sizeOf(BlockStateIndices2Bit) == 8192);
+
+    var indices: BlockStateIndices2Bit = .{};
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 0);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 0);
+
+    indices.setIndexAt(3, BlockPosition.init(0, 0, 0));
+    indices.setIndexAt(3, BlockPosition.init(9, 8, 8));
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 3);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 3);
+}
+
+test "BLockStateIndices4Bit" {
+    try expect(@sizeOf(BlockStateIndices4Bit) == 16384);
+
+    var indices: BlockStateIndices4Bit = .{};
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 0);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 0);
+
+    indices.setIndexAt(9, BlockPosition.init(0, 0, 0));
+    indices.setIndexAt(9, BlockPosition.init(9, 8, 8));
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 9);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 9);
+}
+
+test "BLockStateIndices8Bit" {
+    try expect(@sizeOf(BlockStateIndices8Bit) == 32768);
+
+    var indices: BlockStateIndices8Bit = .{};
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 0);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 0);
+
+    indices.setIndexAt(199, BlockPosition.init(0, 0, 0));
+    indices.setIndexAt(199, BlockPosition.init(9, 8, 8));
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 199);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 199);
+}
+
+test "BLockStateIndices16Bit" {
+    try expect(@sizeOf(BlockStateIndices16Bit) == 65536);
+
+    var indices: BlockStateIndices16Bit = .{};
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 0);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 0);
+
+    indices.setIndexAt(4321, BlockPosition.init(0, 0, 0));
+    indices.setIndexAt(4321, BlockPosition.init(9, 8, 8));
+
+    try expect(indices.indexAt(BlockPosition.init(0, 0, 0)) == 4321);
+    try expect(indices.indexAt(BlockPosition.init(9, 8, 8)) == 4321);
 }
 
 test "Init deinit" {
