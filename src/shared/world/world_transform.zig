@@ -45,7 +45,7 @@ pub const BlockFacing = packed struct {
 /// x has a factor of 1
 /// z has a factor of CHUNK_LENGTH
 /// y has a factor of CHUNK_LENGTH * CHUNK_LENGTH
-const BlockPosition = struct {
+pub const BlockPosition = struct {
     const Self = @This();
 
     /// Index of a block within a chunk's blocks SOA arrays.
