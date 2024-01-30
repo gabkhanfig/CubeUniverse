@@ -1,8 +1,8 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const Chunk = @import("../chunk/chunk.zig").Chunk;
-const TreeLayerIndices = @import("../TreeLayerIndices.zig");
-const NTree = @import("../NTree.zig");
+const Chunk = @import("../chunk/chunk.zig");
+const TreeLayerIndices = @import("TreeLayerIndices.zig");
+const NTree = @import("NTree.zig");
 const assert = std.debug.assert;
 const expect = std.testing.expect;
 
