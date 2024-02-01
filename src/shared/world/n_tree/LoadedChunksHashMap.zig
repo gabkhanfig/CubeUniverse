@@ -1,3 +1,7 @@
+//! Spatial hashing for the active chunks owned by the `NTree`.
+//! Allows extremely fast fetching of chunks, without having
+//! to traverse the entire tree structure.
+
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const Chunk = @import("../chunk/chunk.zig");
@@ -10,7 +14,7 @@ const Self = @This();
 
 groups: []Group,
 chunkCount: usize = 0,
-allocator: *Allocator,
+allocator: *Allocator, // NOTE this field may be unnecessary, as the `Inner` owning this has a reference to the same allocator
 
 pub fn init(allocator: *Allocator) Self {
     var slice: []Group = undefined;
