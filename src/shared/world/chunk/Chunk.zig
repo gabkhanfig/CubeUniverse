@@ -30,10 +30,15 @@ pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!Self {
     return Self{ .inner = @ptrCast(newInner) };
 }
 
-/// Will assert that the owning `NTree`'s state is set to `.treeModify`.
-/// Acquire exclusive ownership of this chunk, and free all memory associated with it.
-/// It's extremely important that no thread is attempting to get access to this chunk,
-/// because it will be completely invalidated.
+/// # Thread safety
+///
+/// Only call `deinit()` through the owning `NTree`'s `TreeModify` access.
+/// Asserts that no other thread has locked the chunk. If another thread has,
+/// that would mean the `NTree` is not exclusively locked.
+///
+/// The programmer must ensure no other thread is even trying to access
+/// the `Chunk` data. Naturally, any thread awaiting invalid memory
+/// is completely unsafe.
 pub fn deinit(self: *Self) void {
     const innerPtr = self.getInnerPtrMut(); // maybe lock?
     innerPtr.deinit();

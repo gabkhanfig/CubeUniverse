@@ -90,8 +90,10 @@ pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
 }
 
 pub fn deinit(self: *Self) void {
-    // During `.chunkModifyOnly`, only the data within the chunk can be modified.
-    // The actual tree nodes cannot be deleted.
+    if (!self._lock.tryLock()) {
+        @panic("Cannot deinit Chunk while other threads have RwLock access to it's inner data");
+    }
+
     const allocator = self.tree.allocator;
 
     var blockStatesSlice: []BlockState = undefined;
@@ -99,6 +101,8 @@ pub fn deinit(self: *Self) void {
     blockStatesSlice.len = self._blockStatesCapacity;
     allocator.free(blockStatesSlice);
     self._blockStateIndices.deinit(allocator);
+    self._lock.unlock();
+
     allocator.destroy(self);
 }
 
