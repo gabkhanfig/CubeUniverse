@@ -20,6 +20,19 @@ pub fn chunkAt(self: Self, position: TreeLayerIndices) ?Chunk {
     return self.getInner().chunks.find(position);
 }
 
+/// Load from disk, or world generation
+/// Not yet implemented
+pub fn loadChunk(_: *Self, _: TreeLayerIndices) !void {
+    @panic("not yet implemented");
+}
+
+/// Unloads the chunk, performing any necessary cleanup steps,
+/// and saving to disk only if the chunk is flagged as having been
+/// modified from world generation.
+pub fn unloadChunk(_: *Self, _: TreeLayerIndices) !void {
+    @panic("not yet implemented, also need to implement chunk has-been-modified flag");
+}
+
 fn getInner(self: Self) *const Inner {
     return @ptrCast(@alignCast(self.inner));
 }
