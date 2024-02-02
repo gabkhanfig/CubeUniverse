@@ -1,9 +1,24 @@
-//! Structure representing the entire world state.
+//! Structure representing an entire world state.
 //! It's similar to an octree, but instead of being 2x2x2, it's
 //! `TREE_NODE_LENGTH` * `TREE_NODE_LENGTH` * `TREE_NODE_LENGTH`.
 //! NTree instance's will always have a consistent memory address,
 //! so storing a reference to it's allocator is safe, as long as the
 //! reference's lifetime does not exceed the lifetime of the NTree.
+//!
+//! # Thread-safe access
+//!
+//! The `NTree`'s data can be accessed in two distinct ways.
+//! - Chunk modification only
+//! - Full tree modification
+//!
+//! With chunk-only modification, chunks/layers/nodes cannot be added,
+//! removed, or anything else from the tree. The only thing permitted
+//! are read/write operations on the data chunks own. The chunks naturally
+//! have to be appropriately locked. This `NTree` locking mode allows multiple
+//! threads to have shared access to the chunks, and reading the state of the tree.
+//!
+//! With full tree modification, the entire tree can be modified freely through
+//! the use of exclusive locking.
 
 const std = @import("std");
 const assert = std.debug.assert;
@@ -15,6 +30,10 @@ const Chunk = @import("../chunk/Chunk.zig");
 const Atomic = std.atomic.Value;
 const AtomicOrder = std.builtin.AtomicOrder;
 const TreeNodeColor = @import("../../engine/types/color.zig").TreeNodeColor;
+const LoadedChunksHashMap = @import("LoadedChunksHashMap.zig");
+
+pub const ChunkModify = @import("ChunkModify.zig");
+pub const TreeModify = @import("TreeModify.zig");
 
 const Self = @This();
 
@@ -27,22 +46,20 @@ _inner: Inner,
 pub fn init(allocator: Allocator) Allocator.Error!*Self {
     const newSelf = try allocator.create(Self);
     newSelf.allocator = allocator;
-    newSelf._inner = Inner{
-        ._rwLock = .{},
-        .topLayer = Layer.init(&newSelf.allocator, 0, null, 0),
-        .allocator = &newSelf.allocator,
-    };
+    newSelf._inner = Inner.init(&newSelf.allocator);
     return newSelf;
 }
 
 /// Calls deinit on all child nodes, and their children,
 /// freeing the memory for all chunks, invalidating everything.
+///
+/// # Thread safety
+///
+/// The programmer must ensure no other thread is even trying to access
+/// the `NTree` data. Naturally, any thread awaiting invalid memory
+/// is completely unsafe.
 pub fn deinit(self: *Self) void {
-    if (!self._inner._rwLock.tryLock()) {
-        @panic("Cannot deinit NTree while other threads have RwLock access to it's inner data");
-    }
-    self._inner.topLayer.deinit();
-    self._inner._rwLock.unlock();
+    self._inner.deinit();
     const allocator = self.allocator;
     allocator.destroy(self);
 }
@@ -52,7 +69,7 @@ pub fn deinit(self: *Self) void {
 /// Naturally, the chunks themselves still need to be locked appropriately.
 pub fn lockChunkModify(self: *Self) ChunkModify {
     self._inner._rwLock.lockShared();
-    return ChunkModify{ .topLayer = &self._inner };
+    return ChunkModify{ .inner = @ptrCast(&self._inner) };
 }
 
 /// Tries to acquire a shared lock to the Tree's data, returning a `ChunkModify`,
@@ -61,7 +78,7 @@ pub fn lockChunkModify(self: *Self) ChunkModify {
 /// Naturally, the chunks themselves still need to be locked appropriately.
 pub fn tryLockChunkModify(self: *Self) !ChunkModify {
     if (self._inner._rwLock.tryLockShared()) {
-        return ChunkModify{ .topLayer = &self._inner };
+        return ChunkModify{ .inner = @ptrCast(&self._inner) };
     } else {
         return error{Locked};
     }
@@ -76,7 +93,7 @@ pub fn unlockChunkModify(self: *Self) void {
 /// Through `TreeModify`, thread safe access to mutate the entire tree's data is guaranteed.
 pub fn lockTreeModify(self: *Self) TreeModify {
     self._inner._rwLock.lock();
-    return TreeModify{ .topLayer = &self._inner };
+    return TreeModify{ .inner = @ptrCast(&self._inner) };
 }
 
 /// Tries to acquire an exclusive lock to the `NTree`'s data, returning a `TreeModify`,
@@ -84,7 +101,7 @@ pub fn lockTreeModify(self: *Self) TreeModify {
 /// Through `TreeModify`, thread safe access to mutate the entire tree's data is guaranteed.
 pub fn tryLockTreeModify(self: *Self) !TreeModify {
     if (self._inner._rwLock.tryLock()) {
-        return TreeModify{ .topLayer = &self._inner };
+        return TreeModify{ .inner = @ptrCast(&self._inner) };
     } else {
         return error{Locked};
     }
@@ -95,32 +112,137 @@ pub fn unlockTreeModify(self: *Self) void {
     self._inner._rwLock.unlock();
 }
 
-const Inner = struct {
+pub const Inner = struct {
     _rwLock: RwLock,
     topLayer: Layer,
+    chunks: LoadedChunksHashMap,
     allocator: *Allocator,
-};
 
-/// Corresponds with `Node` union to make a tagged union,
-/// but with the advantage of Struct of Arrays for SIMD operations on the tags.
-const NodeType = enum(i8) {
-    empty,
-    child,
-    chunk,
-    colored,
-    light,
+    fn init(allocator: *Allocator) Inner {
+        return Inner{
+            ._rwLock = .{},
+            .topLayer = Layer.init(allocator, 0, null, 0),
+            .chunks = LoadedChunksHashMap.init(allocator),
+            .allocator = allocator,
+        };
+    }
+
+    fn deinit(self: Inner) void {
+        if (!self._rwLock.tryLock()) {
+            @panic("Cannot deinit NTree while other threads have RwLock access to it's inner data");
+        }
+
+        // Free all owned stuff.
+        self.topLayer.deinit();
+        self.chunks.deinit();
+
+        self._rwLock.unlock();
+    }
 };
 
 /// Corresponds with `NodeType` enum to make a tagged union,
 /// but with the advantage of Struct of Arrays for SIMD operations on the tags.
-const Node = extern union {
-    empty: u16,
-    child: u16,
-    chunk: u16,
-    color: TreeNodeColor,
-    light: u16, // TODO change this
+const Node = struct { // TODO store LOD data inline?
+    const LOD_COLOR_MASK: usize = 0x0FFF000000000000;
+    const LOD_SHIFT_AMOUNT = 48;
+    const POINTER_MASK: usize = 0x0000FFFFFFFFFFFF;
+    const TYPE_MASK: usize = 0xF000000000000000;
+    const TYPE_SHIFT: u6 = 60;
+
+    pub const Type = enum(usize) {
+        empty = 0,
+        childLayer = @shlExact(1, TYPE_SHIFT),
+        chunk = @shlExact(2, TYPE_SHIFT),
+    };
+
+    value: usize,
+
+    pub fn init() Node {
+        return Node{ .value = 0 };
+    }
+
+    /// Calls `deinit()` on the chunk or child layer,
+    /// depending on if this node is either.
+    pub fn deinit(self: *Node) void {
+        switch (self.nodeType()) {
+            .empty => {},
+            .childLayer => {
+                var c = self.childLayer();
+                c.deinit();
+            },
+            .chunk => {
+                var c = self.chunk();
+                c.deinit();
+            },
+        }
+    }
+
+    pub fn nodeType(self: Node) Type {
+        const maskedTag = self.value & TYPE_MASK;
+        return @enumFromInt(maskedTag);
+    }
+
+    /// Get the RGBA color representing this node as an LOD.
+    pub fn lodColor(self: Node) TreeNodeColor {
+        const maskedLod = self.value & LOD_COLOR_MASK;
+        const shifted = @shrExact(maskedLod, LOD_SHIFT_AMOUNT);
+        const asU16: u16 = @intCast(shifted);
+        return TreeNodeColor{ .mask = asU16 };
+    }
+
+    /// Asserts that this node is a child layer node.
+    /// Get the child layer data of this node.
+    pub fn childLayer(self: Node) *Layer {
+        assert(self.nodeType() == .childLayer);
+        return @ptrFromInt(self.value & POINTER_MASK);
+    }
+
+    /// Asserts that this node is a chunk node.
+    /// Get the chunk data of this node.
+    pub fn chunk(self: Node) Chunk {
+        assert(self.nodeType() == .chunk);
+        return Chunk{ .inner = @ptrFromInt(self.value & POINTER_MASK) };
+    }
+
+    /// Sets the RGBA color representing this node as an LOD.
+    pub fn setLodColor(self: *Node, newLodData: TreeNodeColor) void {
+        const maskedTag = self.value & TYPE_MASK;
+        const maskedPtr = self.value & POINTER_MASK;
+
+        const lodAsUsize: usize = @intCast(newLodData.mask);
+
+        self.value = maskedTag | maskedPtr | @shlExact(lodAsUsize, LOD_SHIFT_AMOUNT);
+    }
+
+    /// Calls `deinit()`.
+    /// Sets this node to hold no data, other than the associated LOD RGBA color data.
+    pub fn setEmpty(self: *Node) void {
+        self.deinit();
+        const maskedLod = self.value & LOD_COLOR_MASK;
+        // Clear tag (empty is 0), and pointer bits. Only keep the lod color.
+        self.value = maskedLod;
+    }
+
+    /// Calls `deinit()`.
+    /// Sets this node to hold a `Chunk`. Does not set the associated LOD RGBA color data.
+    pub fn setChunk(self: *Node, newChunk: Chunk) void {
+        self.deinit();
+        const maskedLod = self.value & LOD_COLOR_MASK;
+        const chunkAsUSize: usize = @bitCast(newChunk);
+
+        self.value = @intFromEnum(Type.chunk) | maskedLod | chunkAsUSize;
+    }
+
+    /// Calls `deinit()`.
+    /// Sets this node to hold a `Layer`. Does not set the associated LOD RGBA color data.
+    pub fn setChildLayer(self: *Node, newLayer: *Layer) void {
+        self.deinit();
+        const maskedLod = self.value & LOD_COLOR_MASK;
+        const layerAsUSize: usize = @intFromPtr(newLayer);
+
+        self.value = @intFromEnum(Type.childLayer) | maskedLod | layerAsUSize;
+    }
 };
-// TODO maybe in future separate the light node into it's own thing?
 
 const Layer = struct {
     // This is the allocator used by the tree.
@@ -129,16 +251,8 @@ const Layer = struct {
     indexInParent: u16,
     treeLayer: u8,
     /// Do not access
-    types: [TreeLayerIndices.TREE_NODES_PER_LAYER]NodeType align(64), // force 64 byte alignment for avx512
     /// Do not access
-    elements: [TreeLayerIndices.TREE_NODES_PER_LAYER]Node align(64),
-
-    _chunks: [*]Chunk = undefined,
-    _children: [*]*Layer = undefined,
-    _chunksLen: u16 = 0,
-    _chunksCapacity: u16 = 0,
-    _childrenLen: u16 = 0,
-    _childrenCapacity: u16 = 0,
+    nodes: [TreeLayerIndices.TREE_NODES_PER_LAYER]Node align(64),
 
     /// If `parent` is null, `indexInParent` is useless. Use 0.
     fn init(allocator: *Allocator, treeLayer: u8, parent: ?*Layer, indexInParent: u16) Layer {
@@ -150,61 +264,27 @@ const Layer = struct {
             .parent = parent,
             .indexInParent = indexInParent,
             .treeLayer = treeLayer,
-            .types = .{.empty} ** TreeLayerIndices.TREE_NODES_PER_LAYER,
-            .elements = .{Node{ .empty = 0 }} ** TreeLayerIndices.TREE_NODES_PER_LAYER,
+            .nodes = .{Node.init()} ** TreeLayerIndices.TREE_NODES_PER_LAYER,
         };
     }
 
     fn deinit(self: *Layer) void {
         for (0..TreeLayerIndices.TREE_NODES_PER_LAYER) |i| {
-            switch (self.types[i]) {
-                .empty => {},
-                .child => {
-                    //self.elements[i].child.deinit();
-                    const index = self.elements[i].child;
-                    assert(index < self._childrenLen);
-                    self._children[index].deinit();
-                },
-                .chunk => {
-                    //self.elements[i].chunk.deinit();
-                    const index = self.elements[i].chunk;
-                    assert(index < self._chunksLen);
-                    self._chunks[index].deinit();
-                },
-                .colored => {},
-                .light => {},
-            }
+            self.nodes[i].deinit();
         }
     }
 
     pub fn isAllEmpty(self: Layer) bool { // TODO optimize with avx512
         for (0..TreeLayerIndices.TREE_NODES_PER_LAYER) |i| {
-            if (self.types[i] != .empty) return false;
+            if (self.nodes[i].nodeType() == .empty) return false;
         }
         return true;
     }
 };
 
-/// Wrapper around NTree that only permits mutation operations on Chunks,
-/// or reading the NTree nodes. The nodes cannot be modified.
-/// Uses shared locking.
-///
-/// # Note
-///
-/// Any chunk fetched using `ChunkModify` will also need to be locked accordingly.
-pub const ChunkModify = struct {
-    inner: *anyopaque,
-};
-
-/// Wrapper around NTree that permits full mutation on the tree structure.
-/// Uses exclusive locking.
-pub const TreeModify = struct {
-    inner: *anyopaque,
-};
-
 test "Node size and align" {
-    try expect(@sizeOf(Node) == 2);
-    try expect(@alignOf(Node) == 2);
+    try expect(@sizeOf(Node) == 8);
+    try expect(@alignOf(Node) == 8);
 }
 
 test "Layer align" {
