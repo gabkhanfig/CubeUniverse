@@ -45,7 +45,7 @@ pub const BlockFacing = packed struct {
 /// x has a factor of 1
 /// z has a factor of CHUNK_LENGTH
 /// y has a factor of CHUNK_LENGTH * CHUNK_LENGTH
-pub const BlockPosition = struct {
+pub const BlockIndex = struct { // TODO rename to BlockIndex
     const Self = @This();
 
     /// Index of a block within a chunk's blocks SOA arrays.
@@ -100,7 +100,7 @@ const WorldPosition = struct {
     /// Convert this `WorldPosition` into it's corresponding `BlockPosition`,
     /// without specifying where in the NTree structure the block is (doesn't specify which chunk).
     /// Asserts that x y z components are within the inclusive range of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
-    pub fn toBlockPos(self: Self) BlockPosition {
+    pub fn toBlockIndex(self: Self) BlockIndex {
         assert(self.x <= WORLD_MAX_BLOCK_POS);
         assert(self.x >= WORLD_MIN_BLOCK_POS);
         assert(self.y <= WORLD_MAX_BLOCK_POS);
@@ -112,7 +112,7 @@ const WorldPosition = struct {
         const relativeY = @mod(@mod(self.y, CHUNK_LENGTH + CHUNK_LENGTH), CHUNK_LENGTH);
         const relativeZ = @mod(@mod(self.z, CHUNK_LENGTH + CHUNK_LENGTH), CHUNK_LENGTH);
 
-        return BlockPosition.init(@intCast(relativeX), @intCast(relativeY), @intCast(relativeZ));
+        return BlockIndex.init(@intCast(relativeX), @intCast(relativeY), @intCast(relativeZ));
     }
 
     /// Convert this `WorldPosition` into the indices of each layer of the NTree.
@@ -190,49 +190,49 @@ fn calculateLayerDiv(layer: comptime_int) comptime_int {
 // Tests
 
 test "BlockPosition init components" {
-    const bpos = BlockPosition.init(0, 8, 31);
+    const bpos = BlockIndex.init(0, 8, 31);
     try expect(bpos.x() == 0);
     try expect(bpos.y() == 8);
     try expect(bpos.z() == 31);
 }
 
 test "BlockPosition is on chunk edge 0, 0, 0" {
-    const bpos = BlockPosition.init(0, 0, 0);
+    const bpos = BlockIndex.init(0, 0, 0);
     try expect(bpos.isOnChunkEdge());
 }
 
 test "BlockPosition is on chunk edge 0, 1, 1" {
-    const bpos = BlockPosition.init(0, 1, 1);
+    const bpos = BlockIndex.init(0, 1, 1);
     try expect(bpos.isOnChunkEdge());
 }
 
 test "BlockPosition is on chunk edge 1, 0, 1" {
-    const bpos = BlockPosition.init(1, 0, 1);
+    const bpos = BlockIndex.init(1, 0, 1);
     try expect(bpos.isOnChunkEdge());
 }
 
 test "BlockPosition is on chunk edge 1, 1, 0" {
-    const bpos = BlockPosition.init(1, 1, 0);
+    const bpos = BlockIndex.init(1, 1, 0);
     try expect(bpos.isOnChunkEdge());
 }
 
 test "BlockPosition is on chunk edge CHUNK_LENGTH - 1, 1, 1" {
-    const bpos = BlockPosition.init(CHUNK_LENGTH - 1, 1, 1);
+    const bpos = BlockIndex.init(CHUNK_LENGTH - 1, 1, 1);
     try expect(bpos.isOnChunkEdge());
 }
 
 test "BlockPosition is on chunk edge 1, CHUNK_LENGTH - 1, 1" {
-    const bpos = BlockPosition.init(1, CHUNK_LENGTH - 1, 1);
+    const bpos = BlockIndex.init(1, CHUNK_LENGTH - 1, 1);
     try expect(bpos.isOnChunkEdge());
 }
 
 test "BlockPosition is on chunk edge 1, 1, CHUNK_LENGTH - 1" {
-    const bpos = BlockPosition.init(1, 1, CHUNK_LENGTH - 1);
+    const bpos = BlockIndex.init(1, 1, CHUNK_LENGTH - 1);
     try expect(bpos.isOnChunkEdge());
 }
 
 test "BlockPosition is not on chunk edge" {
-    const bpos = BlockPosition.init(15, 15, 15);
+    const bpos = BlockIndex.init(15, 15, 15);
     try expect(!bpos.isOnChunkEdge());
 }
 
@@ -243,7 +243,7 @@ test "BlockFacing size align" {
 
 test "WorldPosition to block pos coordinates 0, 0, 0" {
     const pos = WorldPosition{ .x = 0, .y = 0, .z = 0 };
-    const bpos = pos.toBlockPos();
+    const bpos = pos.toBlockIndex();
     try expect(bpos.x() == 0);
     try expect(bpos.y() == 0);
     try expect(bpos.z() == 0);
@@ -251,7 +251,7 @@ test "WorldPosition to block pos coordinates 0, 0, 0" {
 
 test "WorldPosition to block pos coordinates 1, 1, 1" {
     const pos = WorldPosition{ .x = 1, .y = 1, .z = 1 };
-    const bpos = pos.toBlockPos();
+    const bpos = pos.toBlockIndex();
     try expect(bpos.x() == 1);
     try expect(bpos.y() == 1);
     try expect(bpos.z() == 1);
@@ -259,7 +259,7 @@ test "WorldPosition to block pos coordinates 1, 1, 1" {
 
 test "WorldPosition to block pos coordinates -1, -1, -1" {
     const pos = WorldPosition{ .x = -1, .y = -1, .z = -1 };
-    const bpos = pos.toBlockPos();
+    const bpos = pos.toBlockIndex();
     try expect(bpos.x() == CHUNK_LENGTH - 1);
     try expect(bpos.y() == CHUNK_LENGTH - 1);
     try expect(bpos.z() == CHUNK_LENGTH - 1);

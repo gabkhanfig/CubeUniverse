@@ -26,7 +26,7 @@ pub fn loadChunk(_: *Self, _: TreeLayerIndices) !void {
     @panic("not yet implemented");
 }
 
-/// Unloads the chunk, performing any necessary cleanup steps,
+/// Calls `deinit()` on the chunk, and unloads it, performing any necessary cleanup steps,
 /// and saving to disk only if the chunk is flagged as having been
 /// modified from world generation.
 pub fn unloadChunk(_: *Self, _: TreeLayerIndices) !void {

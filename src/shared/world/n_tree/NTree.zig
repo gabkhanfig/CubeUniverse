@@ -127,7 +127,7 @@ pub const Inner = struct {
         };
     }
 
-    fn deinit(self: Inner) void {
+    fn deinit(self: *Inner) void {
         if (!self._rwLock.tryLock()) {
             @panic("Cannot deinit NTree while other threads have RwLock access to it's inner data");
         }

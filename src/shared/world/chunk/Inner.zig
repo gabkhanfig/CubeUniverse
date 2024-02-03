@@ -6,7 +6,7 @@
 //!
 //! Size
 //!
-//! 96 bytes for the chunk itself, and then a varying size depending
+//! 104 bytes for the chunk itself, and then a varying size depending
 //! on the amount of unique `BlockState`'s in the chunk.
 //!
 //! - Up to 2 => 4096 bytes
@@ -17,7 +17,7 @@
 
 const std = @import("std");
 const world_transform = @import("../world_transform.zig");
-const BlockPosition = world_transform.BlockPosition;
+const BlockIndex = world_transform.BlockIndex;
 const RwLock = std.Thread.RwLock;
 const ArrayList = std.ArrayList;
 const TreeLayerIndices = @import("../n_tree/TreeLayerIndices.zig");
@@ -46,8 +46,7 @@ _lock: RwLock, // TODO maybe srwlock?
 /// Do not access directly. Will always be a valid pointer of a length of 1 or more.
 /// The first entry is the state of an air block, meaning that initializing _blockStateIds to all 0's
 /// means the chunk is full of air.
-///
-/// Technical note: A chunk that is only air will be eventually cleaned up and replaced with an empty NTree node.
+/// NOTE: A chunk that is only air will be eventually cleaned up and replaced with an empty NTree node.
 _blockStatesData: [*]BlockState,
 /// Do not access directly. Will always be non-zero
 _blockStatesLen: u16,
@@ -64,13 +63,11 @@ tree: *NTree,
 /// Position of this chunk within the NTree.
 /// Should not be ever modified.
 treePos: TreeLayerIndices,
-/// Do not access directly
-//_blockStateIds: [CHUNK_SIZE]u16 align(64),
-/// Do not access directly
-//_light: [CHUNK_SIZE]BlockLight align(64),
-///
+/// Holds which index each block in the chunk is using as a reference to it's block state.
+/// This allows multiple blocks to reference the same block state.
 _blockStateIndices: BlockStateIndices,
 
+///
 pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
     const newSelf = try tree.allocator.create(Self);
     newSelf._lock = .{};
@@ -106,17 +103,22 @@ pub fn deinit(self: *Self) void {
     allocator.destroy(self);
 }
 
-fn blockStateIndexAt(self: *const Self, position: BlockPosition) u16 {
+fn blockStateIndexAt(self: *const Self, position: BlockIndex) u16 {
     self._blockStateIndices.blockStateIndexAt(position);
 }
 
-fn setBlockStateIndexAt(self: *Self, index: u16, position: BlockPosition) void {
+fn setBlockStateIndexAt(self: *Self, index: u16, position: BlockIndex) void {
     if (index >= self._blockStatesLen) {
         @panic("Index of chunk block states out of range.");
     }
 
     self._blockStateIndices.setBlockStateIndexAt(index, position);
 }
+
+const BlockBreakingProgress = struct {
+    progress: f32,
+    position: BlockIndex,
+};
 
 // Tests
 
