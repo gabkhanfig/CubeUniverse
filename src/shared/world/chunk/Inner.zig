@@ -20,6 +20,7 @@ const world_transform = @import("../world_transform.zig");
 const BlockIndex = world_transform.BlockIndex;
 const RwLock = std.Thread.RwLock;
 const ArrayList = std.ArrayList;
+const ArrayListUnmanaged = std.ArrayListUnmanaged;
 const TreeLayerIndices = @import("../n_tree/TreeLayerIndices.zig");
 const NTree = @import("../n_tree/NTree.zig");
 const Allocator = std.mem.Allocator;
@@ -66,6 +67,10 @@ treePos: TreeLayerIndices,
 /// Holds which index each block in the chunk is using as a reference to it's block state.
 /// This allows multiple blocks to reference the same block state.
 _blockStateIndices: BlockStateIndices,
+/// If no blocks are being broken in the chunk, this is null
+/// It's overwhelmingly likely that no block is being broken in
+/// any given chunk, so storing the extra data would be a waste of memory.
+_breakingProgress: ?*ArrayListUnmanaged(BlockBreakingProgress),
 
 ///
 pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
@@ -82,6 +87,8 @@ pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
     newSelf.treePos = treePos;
 
     newSelf._blockStateIndices = try BlockStateIndices.init(tree.allocator);
+
+    newSelf._breakingProgress = null;
 
     return newSelf;
 }
@@ -130,7 +137,7 @@ test "Size and Align" {
 
     // const sizeOfBlockStateIds = @sizeOf(u16) * CHUNK_SIZE;
     // const sizeOfLights = @sizeOf(BlockLight) * CHUNK_SIZE;
-    try expect(@sizeOf(Self) == 96);
+    try expect(@sizeOf(Self) == 104);
 }
 
 test "Init deinit" {
