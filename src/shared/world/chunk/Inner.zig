@@ -43,19 +43,7 @@ const BLOCK_STATE_INDICES_ENUM_MASK: usize = @shlExact(0b11111111, 56);
 const BLOCK_STATE_INDICES_PTR_MASK: usize = 0xFFFFFFFFFFFF;
 
 /// Do not access directly
-_lock: RwLock, // TODO maybe srwlock?
-/// Do not access directly. Will always be a valid pointer of a length of 1 or more.
-/// The first entry is the state of an air block, meaning that initializing _blockStateIds to all 0's
-/// means the chunk is full of air.
-/// NOTE: A chunk that is only air will be eventually cleaned up and replaced with an empty NTree node.
-_blockStatesData: [*]BlockState,
-/// Do not access directly. Will always be non-zero
-_blockStatesLen: u16,
-/// Do not access directly. Will always be non-zero
-_blockStatesCapacity: u16,
-
-// NOTE there is space for 4 bytes due to padding
-
+_lock: RwLock = .{}, // TODO maybe srwlock?
 /// DO NOT MODIFY, but can access directly.
 /// Allows immediately going to the head of the tree that owns this chunk,
 /// checking the state, and getting the allocator.
@@ -64,31 +52,39 @@ tree: *NTree,
 /// Position of this chunk within the NTree.
 /// Should not be ever modified.
 treePos: TreeLayerIndices,
+/// Do not access directly. Will always be a valid pointer of a length of 1 or more.
+/// The first entry is the state of an air block, meaning that initializing _blockStateIds to all 0's
+/// means the chunk is full of air.
+/// NOTE: A chunk that is only air will be eventually cleaned up and replaced with an empty NTree node.
+_blockStatesData: [*]BlockState,
+/// Do not access directly. Will always be non-zero
+_blockStatesLen: u16 = 1,
+/// Do not access directly. Will always be non-zero
+_blockStatesCapacity: u16 = DEFAULT_BLOCK_STATE_CAPACITY,
+
+// NOTE there is space for 4 bytes due to padding
+
 /// Holds which index each block in the chunk is using as a reference to it's block state.
 /// This allows multiple blocks to reference the same block state.
 _blockStateIndices: BlockStateIndices,
 /// If no blocks are being broken in the chunk, this is null
 /// It's overwhelmingly likely that no block is being broken in
 /// any given chunk, so storing the extra data would be a waste of memory.
-_breakingProgress: ?*ArrayListUnmanaged(BlockBreakingProgress),
+_breakingProgress: ?*ArrayListUnmanaged(BlockBreakingProgress) = null,
 
 ///
 pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
     const newSelf = try tree.allocator.create(Self);
-    newSelf._lock = .{};
 
     const blockStatesSlice = try tree.allocator.alloc(BlockState, DEFAULT_BLOCK_STATE_CAPACITY);
-    newSelf._blockStatesData = blockStatesSlice.ptr;
-    newSelf._blockStatesData[0] = 0;
-    newSelf._blockStatesLen = 1;
-    newSelf._blockStatesCapacity = DEFAULT_BLOCK_STATE_CAPACITY;
+    const indicesPtr = try BlockStateIndices.init(tree.allocator);
 
-    newSelf.tree = tree;
-    newSelf.treePos = treePos;
-
-    newSelf._blockStateIndices = try BlockStateIndices.init(tree.allocator);
-
-    newSelf._breakingProgress = null;
+    newSelf.* = Self{
+        ._blockStatesData = blockStatesSlice.ptr,
+        .tree = tree,
+        .treePos = treePos,
+        ._blockStateIndices = indicesPtr,
+    };
 
     return newSelf;
 }
