@@ -39,8 +39,6 @@ const BlockState = usize;
 const Self = @This();
 
 const DEFAULT_BLOCK_STATE_CAPACITY = 4;
-const BLOCK_STATE_INDICES_ENUM_MASK: usize = @shlExact(0b11111111, 56);
-const BLOCK_STATE_INDICES_PTR_MASK: usize = 0xFFFFFFFFFFFF;
 
 /// Do not access directly
 _lock: RwLock = .{}, // TODO maybe srwlock?
