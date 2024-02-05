@@ -8,4 +8,8 @@ comptime {
     _ = @import("shared/engine/types/job_system.zig");
     _ = @import("shared/world/n_tree/LoadedChunksHashMap.zig");
     _ = @import("shared/world/chunk/BlockStateIndices.zig");
+    _ = @import("shared/engine/math/vector.zig");
+    _ = @import("shared/engine/math/detail/vector2.zig");
+    _ = @import("shared/engine/math/detail/vector3.zig");
+    _ = @import("shared/engine/math/detail/vector4.zig");
 }
