@@ -189,49 +189,49 @@ fn calculateLayerDiv(layer: comptime_int) comptime_int {
 
 // Tests
 
-test "BlockPosition init components" {
+test "BlockIndex init components" {
     const bpos = BlockIndex.init(0, 8, 31);
     try expect(bpos.x() == 0);
     try expect(bpos.y() == 8);
     try expect(bpos.z() == 31);
 }
 
-test "BlockPosition is on chunk edge 0, 0, 0" {
+test "BlockIndex is on chunk edge 0, 0, 0" {
     const bpos = BlockIndex.init(0, 0, 0);
     try expect(bpos.isOnChunkEdge());
 }
 
-test "BlockPosition is on chunk edge 0, 1, 1" {
+test "BlockIndex is on chunk edge 0, 1, 1" {
     const bpos = BlockIndex.init(0, 1, 1);
     try expect(bpos.isOnChunkEdge());
 }
 
-test "BlockPosition is on chunk edge 1, 0, 1" {
+test "BlockIndex is on chunk edge 1, 0, 1" {
     const bpos = BlockIndex.init(1, 0, 1);
     try expect(bpos.isOnChunkEdge());
 }
 
-test "BlockPosition is on chunk edge 1, 1, 0" {
+test "BlockIndex is on chunk edge 1, 1, 0" {
     const bpos = BlockIndex.init(1, 1, 0);
     try expect(bpos.isOnChunkEdge());
 }
 
-test "BlockPosition is on chunk edge CHUNK_LENGTH - 1, 1, 1" {
+test "BlockIndex is on chunk edge CHUNK_LENGTH - 1, 1, 1" {
     const bpos = BlockIndex.init(CHUNK_LENGTH - 1, 1, 1);
     try expect(bpos.isOnChunkEdge());
 }
 
-test "BlockPosition is on chunk edge 1, CHUNK_LENGTH - 1, 1" {
+test "BlockIndex is on chunk edge 1, CHUNK_LENGTH - 1, 1" {
     const bpos = BlockIndex.init(1, CHUNK_LENGTH - 1, 1);
     try expect(bpos.isOnChunkEdge());
 }
 
-test "BlockPosition is on chunk edge 1, 1, CHUNK_LENGTH - 1" {
+test "BlockIndex is on chunk edge 1, 1, CHUNK_LENGTH - 1" {
     const bpos = BlockIndex.init(1, 1, CHUNK_LENGTH - 1);
     try expect(bpos.isOnChunkEdge());
 }
 
-test "BlockPosition is not on chunk edge" {
+test "BlockIndex is not on chunk edge" {
     const bpos = BlockIndex.init(15, 15, 15);
     try expect(!bpos.isOnChunkEdge());
 }
