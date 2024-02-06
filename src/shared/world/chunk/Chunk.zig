@@ -130,6 +130,6 @@ test "init deinit chunk inner" {
     const tree = try NTree.init(std.testing.allocator);
     defer tree.deinit();
 
-    var chunk = try Self.init(tree, TreeLayerIndices.init(.{ 1, 2, 3, 4, 5, 6, 7 }));
+    var chunk = try Self.init(tree, TreeLayerIndices{});
     defer chunk.deinit();
 }

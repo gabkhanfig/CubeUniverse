@@ -138,6 +138,6 @@ test "Init deinit" {
     const tree = try NTree.init(std.testing.allocator);
     defer tree.deinit();
 
-    const inner = try Self.init(tree, TreeLayerIndices.init(.{ 0, 0, 0, 0, 0, 0, 0 }));
+    const inner = try Self.init(tree, TreeLayerIndices{});
     inner.deinit();
 }

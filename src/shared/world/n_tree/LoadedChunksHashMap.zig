@@ -352,7 +352,7 @@ test "Insert chunk" {
     var map = Self.init(&allocator);
     defer map.deinit();
 
-    const indices = TreeLayerIndices.init(.{ 1, 2, 3, 4, 5, 6, 7 });
+    const indices = TreeLayerIndices{};
 
     var chunk = try Chunk.init(tree, indices);
     defer chunk.deinit();
