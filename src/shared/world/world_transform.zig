@@ -87,15 +87,15 @@ pub const BlockIndex = struct { // TODO rename to BlockIndex
 /// Integer position of a block within the world bounds,
 /// specifying the chunk the block is in, and where within the chunk it is.
 /// Each x y z component will be between WorldPosition.WORLD_MAX_BLOCK_POS and WorldPosition.WORLD_MIN_BLOCK_POS.
-const WorldPosition = struct {
+const BlockPosition = struct {
     const Self = @This();
 
     /// X coordinate within the world-space. Must be within the inclusive bounds of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
-    x: i32,
+    x: i64,
     /// Y coordinate within the world-space. Must be within the inclusive bounds of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
-    y: i32,
+    y: i64,
     /// Z coordinate within the world-space. Must be within the inclusive bounds of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
-    z: i32,
+    z: i64,
 
     /// Convert this `WorldPosition` into it's corresponding `BlockPosition`,
     /// without specifying where in the NTree structure the block is (doesn't specify which chunk).
@@ -145,9 +145,9 @@ const WorldPosition = struct {
 
     /// Get the position adjacent to this one at a specific direction.
     pub fn adjacent(self: Self, direction: BlockFacing) Self {
-        var xOffset: i32 = 0;
-        var yOffset: i32 = 0;
-        var zOffset: i32 = 0;
+        var xOffset: i64 = 0;
+        var yOffset: i64 = 0;
+        var zOffset: i64 = 0;
         if (direction.east) xOffset -= 1;
         if (direction.west) xOffset += 1;
         if (direction.down) yOffset -= 1;
@@ -158,7 +158,7 @@ const WorldPosition = struct {
     }
 };
 
-fn calculateLayerIndex(layer: comptime_int, xShiftedPositive: i32, yShiftedPositive: i32, zShiftedPositive: i32) u16 {
+fn calculateLayerIndex(layer: comptime_int, xShiftedPositive: i64, yShiftedPositive: i64, zShiftedPositive: i64) u16 {
     if (layer >= TREE_LAYERS) {
         @compileError("layer cannot exceed TREE_LAYERS");
     }
@@ -241,24 +241,24 @@ test "BlockFacing size align" {
     try expect(@alignOf(BlockFacing) == 1);
 }
 
-test "WorldPosition to block pos coordinates 0, 0, 0" {
-    const pos = WorldPosition{ .x = 0, .y = 0, .z = 0 };
+test "BlockPosition to block pos coordinates 0, 0, 0" {
+    const pos = BlockPosition{ .x = 0, .y = 0, .z = 0 };
     const bpos = pos.toBlockIndex();
     try expect(bpos.x() == 0);
     try expect(bpos.y() == 0);
     try expect(bpos.z() == 0);
 }
 
-test "WorldPosition to block pos coordinates 1, 1, 1" {
-    const pos = WorldPosition{ .x = 1, .y = 1, .z = 1 };
+test "BlockPosition to block pos coordinates 1, 1, 1" {
+    const pos = BlockPosition{ .x = 1, .y = 1, .z = 1 };
     const bpos = pos.toBlockIndex();
     try expect(bpos.x() == 1);
     try expect(bpos.y() == 1);
     try expect(bpos.z() == 1);
 }
 
-test "WorldPosition to block pos coordinates -1, -1, -1" {
-    const pos = WorldPosition{ .x = -1, .y = -1, .z = -1 };
+test "BlockPosition to block pos coordinates -1, -1, -1" {
+    const pos = BlockPosition{ .x = -1, .y = -1, .z = -1 };
     const bpos = pos.toBlockIndex();
     try expect(bpos.x() == CHUNK_LENGTH - 1);
     try expect(bpos.y() == CHUNK_LENGTH - 1);
