@@ -87,7 +87,7 @@ pub const BlockIndex = struct { // TODO rename to BlockIndex
 /// Integer position of a block within the world bounds,
 /// specifying the chunk the block is in, and where within the chunk it is.
 /// Each x y z component will be between WorldPosition.WORLD_MAX_BLOCK_POS and WorldPosition.WORLD_MIN_BLOCK_POS.
-const BlockPosition = struct {
+pub const BlockPosition = struct {
     const Self = @This();
 
     /// X coordinate within the world-space. Must be within the inclusive bounds of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
