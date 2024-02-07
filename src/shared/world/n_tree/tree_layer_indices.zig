@@ -7,10 +7,12 @@ const expect = std.testing.expect;
 
 /// How many nodes long / wide / tall each layer of the NTree is.
 pub const TREE_NODE_LENGTH = 4;
+/// # 64
 /// Total amount of nodes per layer within the NTree.
 pub const TREE_NODES_PER_LAYER: comptime_int = TREE_NODE_LENGTH * TREE_NODE_LENGTH * TREE_NODE_LENGTH;
 /// Total number of layers within the NTree structure.
 pub const TREE_LAYERS = 15;
+/// # 1073741824
 /// The amount of nodes required on a single dimension to fit the entire tree structure.
 /// Can be thought of as the amount of chunks long/wide/tall the tree is.
 pub const TOTAL_NODES_DEEPEST_LAYER_WHOLE_TREE = calculateTotalNodeLength();
@@ -135,10 +137,14 @@ pub const TreeLayerIndex = struct {
         const zAs8: u8 = @intCast(inZ);
         self.value = (self.value & ~(self.value & Z_MASK)) | @shlExact(zAs8, Z_SHIFT);
     }
+
+    pub fn eql(self: Self, other: Self) bool {
+        return self.index == other.index;
+    }
 };
 
 fn calculateTotalNodeLength() comptime_int {
-    var currentVal = TREE_NODE_LENGTH;
+    var currentVal = 1;
     for (0..TREE_LAYERS) |_| {
         currentVal *= TREE_NODE_LENGTH;
     }
