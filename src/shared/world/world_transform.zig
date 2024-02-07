@@ -1,10 +1,14 @@
 const std = @import("std");
 const assert = std.debug.assert;
 const expect = std.testing.expect;
-const TreeLayerIndices = @import("n_tree/TreeLayerIndices.zig");
-const TREE_LAYERS = TreeLayerIndices.TREE_LAYERS;
-const TREE_NODE_LENGTH = TreeLayerIndices.TREE_NODE_LENGTH;
-const TOTAL_NODES_DEEPEST_LAYER_WHOLE_TREE = TreeLayerIndices.TOTAL_NODES_DEEPEST_LAYER_WHOLE_TREE;
+const tree_layer_indices = @import("n_tree/tree_layer_indices.zig");
+const TreeLayerIndices = tree_layer_indices.TreeLayerIndices;
+const TREE_LAYERS = tree_layer_indices.TREE_LAYERS;
+const TREE_NODE_LENGTH = tree_layer_indices.TREE_NODE_LENGTH;
+const TOTAL_NODES_DEEPEST_LAYER_WHOLE_TREE = tree_layer_indices.TOTAL_NODES_DEEPEST_LAYER_WHOLE_TREE;
+const vector_types = @import("../engine/math/vector.zig");
+const vec3 = vector_types.vec3;
+const dvec3 = vector_types.dvec3;
 
 /// Number of blocks long / wide / tall a chunk is.
 pub const CHUNK_LENGTH: comptime_int = 32;
@@ -87,7 +91,7 @@ pub const BlockIndex = struct { // TODO rename to BlockIndex
 /// Integer position of a block within the world bounds,
 /// specifying the chunk the block is in, and where within the chunk it is.
 /// Each x y z component will be between WorldPosition.WORLD_MAX_BLOCK_POS and WorldPosition.WORLD_MIN_BLOCK_POS.
-pub const BlockPosition = struct {
+pub const BlockPosition = extern struct {
     const Self = @This();
 
     /// X coordinate within the world-space. Must be within the inclusive bounds of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
@@ -156,6 +160,22 @@ pub const BlockPosition = struct {
         if (direction.south) zOffset += 1;
         return Self{ .x = self.x + xOffset, .y = self.y + yOffset, .z = self.z + zOffset };
     }
+};
+
+/// Position of anything within the `NTree` structure.
+/// Internally uses `TreeLayerIndices` to specify which chunk it is in,
+/// and then a 32 bit 3 component float `vec3` for where within the chunk.
+/// This structure can be used on the GPU.
+///
+/// - Size = 24 bytes
+/// - Align = 4 bytes
+/// - field `treePosition` byte offset = 0
+/// - field `offset` byte offset = 12
+pub const WorldPosition = extern struct {
+    const Self = @This();
+
+    treePosition: TreeLayerIndices,
+    offset: vec3,
 };
 
 fn calculateLayerIndex(layer: comptime_int, xShiftedPositive: i64, yShiftedPositive: i64, zShiftedPositive: i64) u16 {
@@ -263,4 +283,11 @@ test "BlockPosition to block pos coordinates -1, -1, -1" {
     try expect(bpos.x() == CHUNK_LENGTH - 1);
     try expect(bpos.y() == CHUNK_LENGTH - 1);
     try expect(bpos.z() == CHUNK_LENGTH - 1);
+}
+
+test "WorldPosition size align" {
+    try expect(@sizeOf(WorldPosition) == 24);
+    try expect(@alignOf(WorldPosition) == 4);
+    try expect(@offsetOf(WorldPosition, "treePosition") == 0);
+    try expect(@offsetOf(WorldPosition, "offset") == 12);
 }
