@@ -8,7 +8,7 @@ const Allocator = std.mem.Allocator;
 const NTree = @import("NTree.zig");
 const Inner = NTree.Inner;
 const Chunk = @import("../chunk/Chunk.zig");
-const TreeLayerIndices = @import("TreeLayerIndices.zig");
+const TreeLayerIndices = @import("tree_layer_indices.zig").TreeLayerIndices;
 
 const Self = @This();
 

@@ -25,7 +25,8 @@ const assert = std.debug.assert;
 const expect = std.testing.expect;
 const Allocator = std.mem.Allocator;
 const RwLock = std.Thread.RwLock;
-const TreeLayerIndices = @import("TreeLayerIndices.zig");
+const tree_layer_indices = @import("tree_layer_indices.zig");
+const TreeLayerIndices = tree_layer_indices.TreeLayerIndices;
 const Chunk = @import("../chunk/Chunk.zig");
 const Atomic = std.atomic.Value;
 const AtomicOrder = std.builtin.AtomicOrder;
@@ -252,11 +253,11 @@ const Layer = struct {
     treeLayer: u8,
     /// Do not access
     /// Do not access
-    nodes: [TreeLayerIndices.TREE_NODES_PER_LAYER]Node align(64),
+    nodes: [tree_layer_indices.TREE_NODES_PER_LAYER]Node align(64),
 
     /// If `parent` is null, `indexInParent` is useless. Use 0.
     fn init(allocator: *Allocator, treeLayer: u8, parent: ?*Layer, indexInParent: u16) Layer {
-        assert(treeLayer < TreeLayerIndices.TREE_LAYERS);
+        assert(treeLayer < tree_layer_indices.TREE_LAYERS);
 
         return Layer{
             //.tree = tree,
@@ -264,18 +265,18 @@ const Layer = struct {
             .parent = parent,
             .indexInParent = indexInParent,
             .treeLayer = treeLayer,
-            .nodes = .{Node.init()} ** TreeLayerIndices.TREE_NODES_PER_LAYER,
+            .nodes = .{Node.init()} ** tree_layer_indices.TREE_NODES_PER_LAYER,
         };
     }
 
     fn deinit(self: *Layer) void {
-        for (0..TreeLayerIndices.TREE_NODES_PER_LAYER) |i| {
+        for (0..tree_layer_indices.TREE_NODES_PER_LAYER) |i| {
             self.nodes[i].deinit();
         }
     }
 
     pub fn isAllEmpty(self: Layer) bool { // TODO optimize with avx512
-        for (0..TreeLayerIndices.TREE_NODES_PER_LAYER) |i| {
+        for (0..tree_layer_indices.TREE_NODES_PER_LAYER) |i| {
             if (self.nodes[i].nodeType() == .empty) return false;
         }
         return true;
