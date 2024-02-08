@@ -14,10 +14,13 @@ const dvec3 = vector_types.dvec3;
 pub const CHUNK_LENGTH: comptime_int = 32;
 /// Number of blocks in a chunk.
 pub const CHUNK_SIZE: comptime_int = CHUNK_LENGTH * CHUNK_LENGTH * CHUNK_LENGTH;
+/// # 34359738368
 /// Total number of blocks long / wide / tall the entire world is.
 pub const WORLD_BLOCK_LENGTH: comptime_int = TOTAL_NODES_DEEPEST_LAYER_WHOLE_TREE * CHUNK_LENGTH;
+/// # 17179869183
 /// Maximum position a block can exist at.
 pub const WORLD_MAX_BLOCK_POS: comptime_int = WORLD_BLOCK_LENGTH / 2 - 1;
+/// # -17179869184
 /// Minimum position a block can exist at.
 pub const WORLD_MIN_BLOCK_POS: comptime_int = WORLD_MAX_BLOCK_POS - WORLD_BLOCK_LENGTH + 1;
 
@@ -104,7 +107,7 @@ pub const BlockPosition = extern struct {
     /// Convert this `WorldPosition` into it's corresponding `BlockPosition`,
     /// without specifying where in the NTree structure the block is (doesn't specify which chunk).
     /// Asserts that x y z components are within the inclusive range of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
-    pub fn toBlockIndex(self: Self) BlockIndex {
+    pub fn asBlockIndex(self: Self) BlockIndex {
         assert(self.x <= WORLD_MAX_BLOCK_POS);
         assert(self.x >= WORLD_MIN_BLOCK_POS);
         assert(self.y <= WORLD_MAX_BLOCK_POS);
@@ -120,9 +123,9 @@ pub const BlockPosition = extern struct {
     }
 
     /// Convert this `WorldPosition` into the indices of each layer of the NTree.
-    /// Functionally the same as the position of a chunk, without the BlockPosition.
+    /// Functionally the same as the position of a chunk, without the `BlockIndex`.
     /// Asserts that x y z components are within the inclusive range of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
-    pub fn toTreeIndices(self: Self) TreeLayerIndices {
+    pub fn asTreeIndices(self: Self) TreeLayerIndices {
         assert(self.x <= WORLD_MAX_BLOCK_POS);
         assert(self.x >= WORLD_MIN_BLOCK_POS);
         assert(self.y <= WORLD_MAX_BLOCK_POS);
@@ -130,21 +133,39 @@ pub const BlockPosition = extern struct {
         assert(self.z <= WORLD_MAX_BLOCK_POS);
         assert(self.z >= WORLD_MIN_BLOCK_POS);
 
-        const xShiftedPositive = self.x + WORLD_MAX_BLOCK_POS + 1;
-        const yShiftedPositive = self.y + WORLD_MAX_BLOCK_POS + 1;
-        const ZShiftedPositive = self.z + WORLD_MAX_BLOCK_POS + 1;
+        const xShiftedPositive: i64 = @divTrunc(self.x + WORLD_MAX_BLOCK_POS + 1, CHUNK_LENGTH);
+        const yShiftedPositive: i64 = @divTrunc(self.y + WORLD_MAX_BLOCK_POS + 1, CHUNK_LENGTH);
+        const zShiftedPositive: i64 = @divTrunc(self.z + WORLD_MAX_BLOCK_POS + 1, CHUNK_LENGTH);
 
-        const indices: [TREE_LAYERS]u16 = .{
-            calculateLayerIndex(0, xShiftedPositive, yShiftedPositive, ZShiftedPositive),
-            calculateLayerIndex(1, xShiftedPositive, yShiftedPositive, ZShiftedPositive),
-            calculateLayerIndex(2, xShiftedPositive, yShiftedPositive, ZShiftedPositive),
-            calculateLayerIndex(3, xShiftedPositive, yShiftedPositive, ZShiftedPositive),
-            calculateLayerIndex(4, xShiftedPositive, yShiftedPositive, ZShiftedPositive),
-            calculateLayerIndex(5, xShiftedPositive, yShiftedPositive, ZShiftedPositive),
-            calculateLayerIndex(6, xShiftedPositive, yShiftedPositive, ZShiftedPositive),
-        };
+        var indices: [TREE_LAYERS]TreeLayerIndices.Index = undefined;
+        inline for (0..TREE_LAYERS) |i| {
+            const iAsComptime: comptime_int = i;
+            indices[i] = calculateLayerIndex(iAsComptime, xShiftedPositive, yShiftedPositive, zShiftedPositive);
+        }
 
         return TreeLayerIndices.init(indices);
+    }
+
+    pub fn fromTreeIndices(indices: TreeLayerIndices) Self {
+
+        // Ignore the 4th element. its not needed
+        var components = @Vector(4, i64){ 0, 0, 0, 0 };
+
+        inline for (0..TREE_LAYERS) |i| {
+            const iAsComptime: comptime_int = i;
+            const multiplier: i64 = calculateLayerMultiplier(iAsComptime);
+
+            const index = indices.indexAtLayer(i);
+
+            const indicesVec = @Vector(4, i64){ index.x(), index.y(), index.z(), 0 };
+            const scaledMultiplier: @Vector(4, i64) = @splat(multiplier / TREE_NODE_LENGTH);
+            components += indicesVec * scaledMultiplier;
+        }
+
+        components *= @splat(CHUNK_LENGTH);
+        components -= @splat(WORLD_MAX_BLOCK_POS + 1);
+
+        return BlockPosition{ .x = components[0], .y = components[1], .z = components[2] };
     }
 
     /// Get the position adjacent to this one at a specific direction.
@@ -166,7 +187,6 @@ pub const BlockPosition = extern struct {
 /// Internally uses `TreeLayerIndices` to specify which chunk it is in,
 /// and then a 32 bit 3 component float `vec3` for where within the chunk.
 /// This structure can be used on the GPU.
-///
 /// - Size = 24 bytes
 /// - Align = 4 bytes
 /// - field `treePosition` byte offset = 0
@@ -174,37 +194,88 @@ pub const BlockPosition = extern struct {
 pub const WorldPosition = extern struct {
     const Self = @This();
 
-    treePosition: TreeLayerIndices,
-    offset: vec3,
+    const WORLD_MAX_BLOCK_POS_FLOAT: comptime_float = @floatFromInt(WORLD_MAX_BLOCK_POS);
+    const WORLD_MIN_BLOCK_POS_FLOAT: comptime_float = @floatFromInt(WORLD_MIN_BLOCK_POS);
+    const CHUNK_LENGTH_FLOAT: comptime_float = @floatFromInt(CHUNK_LENGTH);
+
+    treePosition: TreeLayerIndices = .{},
+    /// Represents the offset within a chunk, on the same scale as a block. Every 1 unit is 1 block.
+    /// Each component of the vector must be between the range of `component >= 0` and `component < CHUNK_LENGTH`
+    /// (0 is inclusive, and `CHUNK_LENGTH` is exclusive).
+    offset: vec3 = .{},
+
+    /// Get the index of a block in a chunk that this `WorldPosition` is at.
+    /// Uses flooring.
+    pub fn asBlockIndex(self: Self) BlockIndex {
+        assert(self.offset.x < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.x >= 0.0);
+        assert(self.offset.y < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.y >= 0.0);
+        assert(self.offset.z < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.z >= 0.0);
+
+        const xAsInt: u16 = @intFromFloat(self.offset.x);
+        const yAsInt: u16 = @intFromFloat(self.offset.y);
+        const zAsInt: u16 = @intFromFloat(self.offset.z);
+
+        return BlockIndex.init(xAsInt, yAsInt, zAsInt);
+    }
+
+    pub fn fromBlockPosition(pos: BlockPosition) Self {
+        const treePos = pos.asTreeIndices();
+
+        const blockIndex = pos.asBlockIndex();
+        const blockOffset = vec3{
+            .x = @floatFromInt(blockIndex.x()),
+            .y = @floatFromInt(blockIndex.y()),
+            .z = @floatFromInt(blockIndex.z()),
+        };
+
+        return Self{ .treePosition = treePos, .offset = blockOffset };
+    }
+
+    /// Get the position of a block that this `WorldPosition` is at.
+    /// Uses flooring.
+    pub fn asBlockPosition(self: Self) BlockPosition {
+        const treeAsBlockPos = BlockPosition.fromTreeIndices(self.treePosition);
+
+        const xOffset: i64 = @intFromFloat(self.offset.x);
+        const yOffset: i64 = @intFromFloat(self.offset.y);
+        const zOffset: i64 = @intFromFloat(self.offset.z);
+
+        return BlockPosition{
+            .x = treeAsBlockPos.x + xOffset,
+            .y = treeAsBlockPos.y + yOffset,
+            .z = treeAsBlockPos.z + zOffset,
+        };
+    }
+
+    pub fn fromVector(_: dvec3) Self {}
+
+    /// Gets this `WorldPosition` as a 3 component 64 bit float vector.
+    pub fn asVector(_: Self) dvec3 {}
 };
 
-fn calculateLayerIndex(layer: comptime_int, xShiftedPositive: i64, yShiftedPositive: i64, zShiftedPositive: i64) u16 {
+fn calculateLayerIndex(comptime layer: comptime_int, xShiftedPositive: i64, yShiftedPositive: i64, zShiftedPositive: i64) TreeLayerIndices.Index {
     if (layer >= TREE_LAYERS) {
         @compileError("layer cannot exceed TREE_LAYERS");
     }
 
-    if (layer == 0) {
-        const normalizedX: u16 = @intCast((xShiftedPositive * TREE_NODE_LENGTH) / WORLD_BLOCK_LENGTH);
-        const normalizedY: u16 = @intCast((yShiftedPositive * TREE_NODE_LENGTH) / WORLD_BLOCK_LENGTH);
-        const normalizedZ: u16 = @intCast((zShiftedPositive * TREE_NODE_LENGTH) / WORLD_BLOCK_LENGTH);
+    const DIV = calculateLayerMultiplier(layer);
 
-        return normalizedX + (normalizedZ * TREE_NODE_LENGTH) + (normalizedY * TREE_NODE_LENGTH * TREE_NODE_LENGTH);
-    } else {
-        const DIV = comptime (calculateLayerDiv(layer));
+    const normalizedX: u2 = @intCast(@divTrunc((@mod(xShiftedPositive, DIV) * TREE_NODE_LENGTH), DIV));
+    const normalizedY: u2 = @intCast(@divTrunc((@mod(yShiftedPositive, DIV) * TREE_NODE_LENGTH), DIV));
+    const normalizedZ: u2 = @intCast(@divTrunc((@mod(zShiftedPositive, DIV) * TREE_NODE_LENGTH), DIV));
 
-        const normalizedX: u16 = @intCast(((xShiftedPositive % DIV) * TREE_NODE_LENGTH) / DIV);
-        const normalizedY: u16 = @intCast(((yShiftedPositive % DIV) * TREE_NODE_LENGTH) / DIV);
-        const normalizedZ: u16 = @intCast(((zShiftedPositive % DIV) * TREE_NODE_LENGTH) / DIV);
-
-        return normalizedX + (normalizedZ * TREE_NODE_LENGTH) + (normalizedY * TREE_NODE_LENGTH * TREE_NODE_LENGTH);
-    }
+    return TreeLayerIndices.Index.init(normalizedX, normalizedY, normalizedZ);
 }
 
-fn calculateLayerDiv(layer: comptime_int) comptime_int {
+fn calculateLayerMultiplier(comptime layer: comptime_int) comptime_int {
     var out = 1;
-    for (0..layer) |_| {
+    for (layer..TREE_LAYERS) |_| {
         out *= TREE_NODE_LENGTH;
     }
+    return out;
 }
 
 // Tests
@@ -263,7 +334,7 @@ test "BlockFacing size align" {
 
 test "BlockPosition to block pos coordinates 0, 0, 0" {
     const pos = BlockPosition{ .x = 0, .y = 0, .z = 0 };
-    const bpos = pos.toBlockIndex();
+    const bpos = pos.asBlockIndex();
     try expect(bpos.x() == 0);
     try expect(bpos.y() == 0);
     try expect(bpos.z() == 0);
@@ -271,7 +342,7 @@ test "BlockPosition to block pos coordinates 0, 0, 0" {
 
 test "BlockPosition to block pos coordinates 1, 1, 1" {
     const pos = BlockPosition{ .x = 1, .y = 1, .z = 1 };
-    const bpos = pos.toBlockIndex();
+    const bpos = pos.asBlockIndex();
     try expect(bpos.x() == 1);
     try expect(bpos.y() == 1);
     try expect(bpos.z() == 1);
@@ -279,13 +350,65 @@ test "BlockPosition to block pos coordinates 1, 1, 1" {
 
 test "BlockPosition to block pos coordinates -1, -1, -1" {
     const pos = BlockPosition{ .x = -1, .y = -1, .z = -1 };
-    const bpos = pos.toBlockIndex();
+    const bpos = pos.asBlockIndex();
     try expect(bpos.x() == CHUNK_LENGTH - 1);
     try expect(bpos.y() == CHUNK_LENGTH - 1);
     try expect(bpos.z() == CHUNK_LENGTH - 1);
 }
 
-test "WorldPosition size align" {
+test "BlockPosition from TreeLayerIndices" {
+    var indices: [TREE_LAYERS]TreeLayerIndices.Index = undefined;
+    indices[0] = TreeLayerIndices.Index.init(2, 2, 2);
+    for (1..TREE_LAYERS) |i| {
+        indices[i] = TreeLayerIndices.Index.init(0, 0, 0);
+    }
+    {
+        const treePos = TreeLayerIndices.init(indices);
+        const pos = BlockPosition.fromTreeIndices(treePos);
+        try expect(pos.x == 0);
+        try expect(pos.y == 0);
+        try expect(pos.z == 0);
+    }
+    indices[TREE_LAYERS - 1] = TreeLayerIndices.Index.init(1, 1, 1);
+    {
+        const treePos = TreeLayerIndices.init(indices);
+        const pos = BlockPosition.fromTreeIndices(treePos);
+        try expect(pos.x == 32);
+        try expect(pos.y == 32);
+        try expect(pos.z == 32);
+    }
+}
+
+test "BlockPosition as TreeLayerIndices" {
+    const pos = BlockPosition{ .x = 0, .y = 0, .z = 0 };
+    const treeInd = pos.asTreeIndices();
+    try expect(treeInd.indexAtLayer(0).eql(TreeLayerIndices.Index.init(2, 2, 2)));
+    for (1..TREE_LAYERS) |i| {
+        try expect(treeInd.indexAtLayer(i).eql(TreeLayerIndices.Index.init(0, 0, 0)));
+    }
+}
+
+test "BlockPosition as TreeLayerIndices sanity" {
+    { // should still be in same chunk as 0, 0, 0
+        const pos = BlockPosition{ .x = 31, .y = 31, .z = 31 };
+        const treeInd = pos.asTreeIndices();
+        try expect(treeInd.indexAtLayer(0).eql(TreeLayerIndices.Index.init(2, 2, 2)));
+        for (1..TREE_LAYERS) |i| {
+            try expect(treeInd.indexAtLayer(i).eql(TreeLayerIndices.Index.init(0, 0, 0)));
+        }
+    }
+    { // next chunk over
+        const pos = BlockPosition{ .x = 32, .y = 32, .z = 32 };
+        const treeInd = pos.asTreeIndices();
+        try expect(treeInd.indexAtLayer(0).eql(TreeLayerIndices.Index.init(2, 2, 2)));
+        for (1..(TREE_LAYERS - 1)) |i| {
+            try expect(treeInd.indexAtLayer(i).eql(TreeLayerIndices.Index.init(0, 0, 0)));
+        }
+        try expect(treeInd.indexAtLayer(TREE_LAYERS - 1).eql(TreeLayerIndices.Index.init(1, 1, 1)));
+    }
+}
+
+test "WorldPosition size align offset" {
     try expect(@sizeOf(WorldPosition) == 24);
     try expect(@alignOf(WorldPosition) == 4);
     try expect(@offsetOf(WorldPosition, "treePosition") == 0);
