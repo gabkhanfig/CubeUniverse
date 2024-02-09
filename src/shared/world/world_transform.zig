@@ -237,6 +237,13 @@ pub const WorldPosition = extern struct {
     /// Get the position of a block that this `WorldPosition` is at.
     /// Uses flooring.
     pub fn asBlockPosition(self: Self) BlockPosition {
+        assert(self.offset.x < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.x >= 0.0);
+        assert(self.offset.y < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.y >= 0.0);
+        assert(self.offset.z < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.z >= 0.0);
+
         const treeAsBlockPos = BlockPosition.fromTreeIndices(self.treePosition);
 
         const xOffset: i64 = @intFromFloat(self.offset.x);
