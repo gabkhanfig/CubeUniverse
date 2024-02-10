@@ -146,6 +146,8 @@ pub const BlockPosition = extern struct {
         return TreeLayerIndices.init(indices);
     }
 
+    /// Does not hold any information on which `BlockIndex` is used.
+    /// Each component is effectively clamped to increments of `CHUNK_LENGTH`.
     pub fn fromTreeIndices(indices: TreeLayerIndices) Self {
 
         // Ignore the 4th element. its not needed
@@ -180,6 +182,10 @@ pub const BlockPosition = extern struct {
         if (direction.north) zOffset -= 1;
         if (direction.south) zOffset += 1;
         return Self{ .x = self.x + xOffset, .y = self.y + yOffset, .z = self.z + zOffset };
+    }
+
+    pub fn eql(self: Self, other: Self) bool {
+        return self.x == other.x and self.y == other.y and self.z == other.z;
     }
 };
 
@@ -221,7 +227,15 @@ pub const WorldPosition = extern struct {
         return BlockIndex.init(xAsInt, yAsInt, zAsInt);
     }
 
+    /// Convert the position of a block to a `WorldPosition`
     pub fn fromBlockPosition(pos: BlockPosition) Self {
+        assert(pos.x <= WORLD_MAX_BLOCK_POS);
+        assert(pos.x >= WORLD_MIN_BLOCK_POS);
+        assert(pos.y <= WORLD_MAX_BLOCK_POS);
+        assert(pos.y >= WORLD_MIN_BLOCK_POS);
+        assert(pos.z <= WORLD_MAX_BLOCK_POS);
+        assert(pos.z >= WORLD_MIN_BLOCK_POS);
+
         const treePos = pos.asTreeIndices();
 
         const blockIndex = pos.asBlockIndex();
@@ -235,7 +249,7 @@ pub const WorldPosition = extern struct {
     }
 
     /// Get the position of a block that this `WorldPosition` is at.
-    /// Uses flooring.
+    /// Floors the `offset`.
     pub fn asBlockPosition(self: Self) BlockPosition {
         assert(self.offset.x < CHUNK_LENGTH_FLOAT);
         assert(self.offset.x >= 0.0);
@@ -257,10 +271,58 @@ pub const WorldPosition = extern struct {
         };
     }
 
-    pub fn fromVector(_: dvec3) Self {}
+    /// Convert a vector of 64 bit float coordinates to a `WorldPosition`.
+    pub fn fromVector(pos: dvec3) Self {
+        assert(pos.x <= WORLD_MAX_BLOCK_POS_FLOAT);
+        assert(pos.x >= WORLD_MIN_BLOCK_POS_FLOAT);
+        assert(pos.y <= WORLD_MAX_BLOCK_POS_FLOAT);
+        assert(pos.y >= WORLD_MIN_BLOCK_POS_FLOAT);
+        assert(pos.z <= WORLD_MAX_BLOCK_POS_FLOAT);
+        assert(pos.z >= WORLD_MIN_BLOCK_POS_FLOAT);
 
-    /// Gets this `WorldPosition` as a 3 component 64 bit float vector.
-    pub fn asVector(_: Self) dvec3 {}
+        const offset = vec3{
+            .x = @floatCast(@mod(pos.x, CHUNK_LENGTH_FLOAT)),
+            .y = @floatCast(@mod(pos.y, CHUNK_LENGTH_FLOAT)),
+            .z = @floatCast(@mod(pos.z, CHUNK_LENGTH_FLOAT)),
+        };
+
+        const bpos = BlockPosition{
+            .x = @intFromFloat(pos.x),
+            .y = @intFromFloat(pos.y),
+            .z = @intFromFloat(pos.z),
+        };
+
+        const treePos = bpos.asTreeIndices();
+
+        return Self{ .treePosition = treePos, .offset = offset };
+    }
+
+    /// Gets this `WorldPosition` as a vector of 64 bit float coordinates
+    pub fn asVector(self: Self) dvec3 {
+        assert(self.offset.x < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.x >= 0.0);
+        assert(self.offset.y < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.y >= 0.0);
+        assert(self.offset.z < CHUNK_LENGTH_FLOAT);
+        assert(self.offset.z >= 0.0);
+
+        const treeAsBlockPos = BlockPosition.fromTreeIndices(self.treePosition);
+        const treePosVec = dvec3{
+            .x = @floatFromInt(treeAsBlockPos.x),
+            .y = @floatFromInt(treeAsBlockPos.y),
+            .z = @floatFromInt(treeAsBlockPos.z),
+        };
+
+        const xOffset: f64 = @floatCast(self.offset.x);
+        const yOffset: f64 = @floatCast(self.offset.y);
+        const zOffset: f64 = @floatCast(self.offset.z);
+
+        return dvec3{
+            .x = treePosVec.x + xOffset,
+            .y = treePosVec.y + yOffset,
+            .z = treePosVec.z + zOffset,
+        };
+    }
 };
 
 fn calculateLayerIndex(comptime layer: comptime_int, xShiftedPositive: i64, yShiftedPositive: i64, zShiftedPositive: i64) TreeLayerIndices.Index {
@@ -413,6 +475,39 @@ test "BlockPosition as TreeLayerIndices sanity" {
         }
         try expect(treeInd.indexAtLayer(TREE_LAYERS - 1).eql(TreeLayerIndices.Index.init(1, 1, 1)));
     }
+    { // Double converstion
+        const pos = BlockPosition{ .x = 123456789, .y = -5000000000, .z = WORLD_MAX_BLOCK_POS };
+        const treePos = pos.asTreeIndices();
+        const convertBack = BlockPosition.fromTreeIndices(treePos);
+
+        // Clamp to increments of CHUNK_LENGTH
+        try expect((pos.x - @mod(pos.x, CHUNK_LENGTH)) == convertBack.x);
+        try expect((pos.y - @mod(pos.y, CHUNK_LENGTH)) == convertBack.y);
+        try expect((pos.z - @mod(pos.z, CHUNK_LENGTH)) == convertBack.z);
+    }
+}
+
+test "BlockPosition equal" {
+    {
+        const pos1 = BlockPosition{ .x = WORLD_MIN_BLOCK_POS, .y = 0, .z = WORLD_MAX_BLOCK_POS };
+        const pos2 = BlockPosition{ .x = WORLD_MIN_BLOCK_POS, .y = 0, .z = WORLD_MAX_BLOCK_POS };
+        try expect(pos1.eql(pos2));
+    }
+    {
+        const pos1 = BlockPosition{ .x = WORLD_MIN_BLOCK_POS + 1, .y = 0, .z = WORLD_MAX_BLOCK_POS };
+        const pos2 = BlockPosition{ .x = WORLD_MIN_BLOCK_POS, .y = 0, .z = WORLD_MAX_BLOCK_POS };
+        try expect(!pos1.eql(pos2));
+    }
+    {
+        const pos1 = BlockPosition{ .x = WORLD_MIN_BLOCK_POS, .y = -1, .z = WORLD_MAX_BLOCK_POS };
+        const pos2 = BlockPosition{ .x = WORLD_MIN_BLOCK_POS, .y = 0, .z = WORLD_MAX_BLOCK_POS };
+        try expect(!pos1.eql(pos2));
+    }
+    {
+        const pos1 = BlockPosition{ .x = WORLD_MIN_BLOCK_POS, .y = 0, .z = WORLD_MAX_BLOCK_POS - 1 };
+        const pos2 = BlockPosition{ .x = WORLD_MIN_BLOCK_POS, .y = 0, .z = WORLD_MAX_BLOCK_POS };
+        try expect(!pos1.eql(pos2));
+    }
 }
 
 test "WorldPosition size align offset" {
@@ -420,4 +515,158 @@ test "WorldPosition size align offset" {
     try expect(@alignOf(WorldPosition) == 4);
     try expect(@offsetOf(WorldPosition, "treePosition") == 0);
     try expect(@offsetOf(WorldPosition, "offset") == 12);
+}
+
+test "WorldPosition as block index" {
+    const pos = WorldPosition{ .offset = vec3{ .x = 3.4, .y = 3.2, .z = 3 } };
+    const ind = pos.asBlockIndex();
+    try expect(ind.x() == 3);
+    try expect(ind.y() == 3);
+    try expect(ind.z() == 3);
+}
+
+test "WorldPosition from BlockPosition" {
+    {
+        const bpos = BlockPosition{ .x = 36, .y = 37, .z = 38 };
+        const pos = WorldPosition.fromBlockPosition(bpos);
+
+        try expect(pos.treePosition.indexAtLayer(0).eql(TreeLayerIndices.Index.init(2, 2, 2)));
+        for (1..(TREE_LAYERS - 1)) |i| {
+            try expect(pos.treePosition.indexAtLayer(i).eql(TreeLayerIndices.Index.init(0, 0, 0)));
+        }
+        try expect(pos.treePosition.indexAtLayer(TREE_LAYERS - 1).eql(TreeLayerIndices.Index.init(1, 1, 1)));
+
+        try expect(pos.offset.x == 4);
+        try expect(pos.offset.y == 5);
+        try expect(pos.offset.z == 6);
+    }
+    { // negative values
+        const bpos = BlockPosition{
+            .x = WORLD_MIN_BLOCK_POS + 36,
+            .y = WORLD_MIN_BLOCK_POS + 37,
+            .z = WORLD_MIN_BLOCK_POS + 38,
+        };
+        const pos = WorldPosition.fromBlockPosition(bpos);
+
+        for (0..(TREE_LAYERS - 1)) |i| {
+            try expect(pos.treePosition.indexAtLayer(i).eql(TreeLayerIndices.Index.init(0, 0, 0)));
+        }
+        try expect(pos.treePosition.indexAtLayer(TREE_LAYERS - 1).eql(TreeLayerIndices.Index.init(1, 1, 1)));
+
+        try expect(pos.offset.x == 4);
+        try expect(pos.offset.y == 5);
+        try expect(pos.offset.z == 6);
+    }
+}
+
+test "WorldPosition as BlockPosition" {
+    {
+        var indices: [TREE_LAYERS]TreeLayerIndices.Index = undefined;
+        indices[0] = TreeLayerIndices.Index.init(2, 2, 2);
+        for (1..(TREE_LAYERS - 1)) |i| {
+            indices[i] = TreeLayerIndices.Index.init(0, 0, 0);
+        }
+        indices[TREE_LAYERS - 1] = TreeLayerIndices.Index.init(1, 1, 1);
+
+        const pos = WorldPosition{
+            .treePosition = TreeLayerIndices.init(indices),
+            .offset = .{ .x = 4, .y = 5, .z = 6 },
+        };
+
+        const bpos = pos.asBlockPosition();
+        try expect(bpos.x == 36);
+        try expect(bpos.y == 37);
+        try expect(bpos.z == 38);
+    }
+    { // negative values
+        var indices: [TREE_LAYERS]TreeLayerIndices.Index = undefined;
+        for (0..(TREE_LAYERS - 1)) |i| {
+            indices[i] = TreeLayerIndices.Index.init(0, 0, 0);
+        }
+        indices[TREE_LAYERS - 1] = TreeLayerIndices.Index.init(1, 1, 1);
+
+        const pos = WorldPosition{
+            .treePosition = TreeLayerIndices.init(indices),
+            .offset = .{ .x = 4, .y = 5, .z = 6 },
+        };
+
+        const bpos = pos.asBlockPosition();
+        try expect(bpos.x == WORLD_MIN_BLOCK_POS + 36);
+        try expect(bpos.y == WORLD_MIN_BLOCK_POS + 37);
+        try expect(bpos.z == WORLD_MIN_BLOCK_POS + 38);
+    }
+}
+
+const TEST_EPSILON = 0.0001;
+
+test "WorldPosition from dvec3" {
+    {
+        const vec = dvec3{ .x = 36.1, .y = 37.5, .z = 38.9 };
+        const pos = WorldPosition.fromVector(vec);
+
+        try expect(pos.treePosition.indexAtLayer(0).eql(TreeLayerIndices.Index.init(2, 2, 2)));
+        for (1..(TREE_LAYERS - 1)) |i| {
+            try expect(pos.treePosition.indexAtLayer(i).eql(TreeLayerIndices.Index.init(0, 0, 0)));
+        }
+        try expect(pos.treePosition.indexAtLayer(TREE_LAYERS - 1).eql(TreeLayerIndices.Index.init(1, 1, 1)));
+
+        try expect(std.math.approxEqAbs(f32, pos.offset.x, 4.1, TEST_EPSILON));
+        try expect(std.math.approxEqAbs(f32, pos.offset.y, 5.5, TEST_EPSILON));
+        try expect(std.math.approxEqAbs(f32, pos.offset.z, 6.9, TEST_EPSILON));
+    }
+    { // negative values
+        const vec = dvec3{
+            .x = WORLD_MIN_BLOCK_POS + 36.1,
+            .y = WORLD_MIN_BLOCK_POS + 37.5,
+            .z = WORLD_MIN_BLOCK_POS + 38.9,
+        };
+        const pos = WorldPosition.fromVector(vec);
+
+        for (0..(TREE_LAYERS - 1)) |i| {
+            try expect(pos.treePosition.indexAtLayer(i).eql(TreeLayerIndices.Index.init(0, 0, 0)));
+        }
+        try expect(pos.treePosition.indexAtLayer(TREE_LAYERS - 1).eql(TreeLayerIndices.Index.init(1, 1, 1)));
+
+        try expect(std.math.approxEqAbs(f32, pos.offset.x, 4.1, TEST_EPSILON));
+        try expect(std.math.approxEqAbs(f32, pos.offset.y, 5.5, TEST_EPSILON));
+        try expect(std.math.approxEqAbs(f32, pos.offset.z, 6.9, TEST_EPSILON));
+    }
+}
+
+test "WorldPosition as dvec3" {
+    {
+        var indices: [TREE_LAYERS]TreeLayerIndices.Index = undefined;
+        indices[0] = TreeLayerIndices.Index.init(2, 2, 2);
+        for (1..(TREE_LAYERS - 1)) |i| {
+            indices[i] = TreeLayerIndices.Index.init(0, 0, 0);
+        }
+        indices[TREE_LAYERS - 1] = TreeLayerIndices.Index.init(1, 1, 1);
+
+        const pos = WorldPosition{
+            .treePosition = TreeLayerIndices.init(indices),
+            .offset = .{ .x = 4.9, .y = 5.1, .z = 6.5 },
+        };
+
+        const vec = pos.asVector();
+        try expect(std.math.approxEqAbs(f64, vec.x, 36.9, TEST_EPSILON));
+        try expect(std.math.approxEqAbs(f64, vec.y, 37.1, TEST_EPSILON));
+        try expect(std.math.approxEqAbs(f64, vec.z, 38.5, TEST_EPSILON));
+    }
+    { // negative values
+        var indices: [TREE_LAYERS]TreeLayerIndices.Index = undefined;
+        for (0..(TREE_LAYERS - 1)) |i| {
+            indices[i] = TreeLayerIndices.Index.init(0, 0, 0);
+        }
+        indices[TREE_LAYERS - 1] = TreeLayerIndices.Index.init(1, 1, 1);
+
+        const pos = WorldPosition{
+            .treePosition = TreeLayerIndices.init(indices),
+            .offset = .{ .x = 4.9, .y = 5.1, .z = 6.5 },
+        };
+
+        const vec = pos.asVector();
+        try expect(std.math.approxEqAbs(f64, vec.x, WorldPosition.WORLD_MIN_BLOCK_POS_FLOAT + 36.9, TEST_EPSILON));
+        try expect(std.math.approxEqAbs(f64, vec.y, WorldPosition.WORLD_MIN_BLOCK_POS_FLOAT + 37.1, TEST_EPSILON));
+        try expect(std.math.approxEqAbs(f64, vec.z, WorldPosition.WORLD_MIN_BLOCK_POS_FLOAT + 38.5, TEST_EPSILON));
+    }
 }
