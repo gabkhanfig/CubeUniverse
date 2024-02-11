@@ -10,25 +10,50 @@ const LoadedChunksHashMap = @import("shared/world/n_tree/LoadedChunksHashMap.zig
 const world_transform = @import("shared/world/world_transform.zig");
 const BlockPosition = world_transform.BlockPosition;
 
+const Application = @import("shared/Application.zig");
+
 pub fn main() !void {
-    std.debug.print("\n", .{});
+    //std.debug.print("\n", .{});
     //VulkanEngine.init();
     //defer VulkanEngine.deinit();
 
     //var e = VulkanEngine.init(std.heap.page_allocator);
     //e.cleanup();
 
-    var indices: [tree_layer_indices.TREE_LAYERS]TreeLayerIndices.Index = undefined;
-    indices[0] = TreeLayerIndices.Index.init(2, 2, 2);
-    for (1..tree_layer_indices.TREE_LAYERS) |i| {
-        indices[i] = TreeLayerIndices.Index.init(0, 0, 0);
-    }
-    {
-        const treePos = TreeLayerIndices.init(indices);
-        const pos = BlockPosition.fromTreeIndices(treePos);
-        std.debug.print("x: {}\ny: {}\nz: {}\n", .{ pos.x, pos.y, pos.z });
-        // try expect(pos.x == 0);
-        // try expect(pos.y == 0);
-        // try expect(pos.z == 0);
-    }
+    // var window: *c.GLFWwindow = undefined;
+
+    // // Initialize the library
+    // if (c.glfwInit() == c.GLFW_FALSE) {
+    //     @panic("failed to init glfw");
+    // }
+
+    // // Create a windowed mode window and its OpenGL context */
+    // const createdWindow = c.glfwCreateWindow(640, 480, "Hello World", null, null);
+    // if (createdWindow == null) {
+    //     c.glfwTerminate();
+    //     @panic("failed to create glfw window");
+    // }
+
+    // window = createdWindow.?;
+
+    // var extensionCount: u32 = undefined;
+    // _ = c.vkEnumerateInstanceExtensionProperties(null, &extensionCount, null);
+
+    // std.debug.print("{} extensions supported\n", .{extensionCount});
+
+    // // Make the window's context current
+    // c.glfwMakeContextCurrent(window);
+
+    // // Loop until the user closes the window
+    // while (c.glfwWindowShouldClose(window) == c.GLFW_FALSE) {
+    //     // Poll for and process events
+    //     c.glfwPollEvents();
+    // }
+
+    // c.glfwTerminate();
+
+    var app = Application.init();
+    defer app.deinit();
+
+    app.run();
 }

@@ -34,14 +34,14 @@ pub fn build(b: *std.Build) void {
     // to add a module, do this
     //exe.root_module.addImport("module name", module);
 
-    // exe.addLibraryPath(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib"));
-    // exe.addIncludePath(LazyPath.relative("thirdparty/glfw-zig/zig-out/include"));
-    // exe.addObjectFile(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib/glfw.lib"));
+    exe.addLibraryPath(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib"));
+    exe.addIncludePath(LazyPath.relative("thirdparty/glfw-zig/zig-out/include"));
+    exe.addObjectFile(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib/glfw.lib"));
 
     // see thirdparty/glfw-zig/build.zig
-    // exe.linkSystemLibrary("gdi32");
-    // exe.linkSystemLibrary("user32");
-    // exe.linkSystemLibrary("shell32");
+    exe.linkSystemLibrary("gdi32");
+    exe.linkSystemLibrary("user32");
+    exe.linkSystemLibrary("shell32");
 
     exe.linkLibC();
     exe.linkLibCpp();

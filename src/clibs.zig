@@ -5,4 +5,5 @@ pub usingnamespace @cImport({
     @cInclude("cimgui.h");
     @cInclude("SDL.h");
     @cInclude("SDL_vulkan.h");
+    @cInclude("GLFW/glfw3.h");
 });
