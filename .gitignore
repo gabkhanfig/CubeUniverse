@@ -2,3 +2,4 @@ zig-cache
 zig-out
 temp
 thirdparty/sdl/build
+*.spv
