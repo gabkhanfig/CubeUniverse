@@ -19,7 +19,7 @@ pub fn init(allocator: Allocator) *Self {
     newSelf.allocator = allocator;
     newSelf.window = Window.init(WINDOW_WIDTH, WINDOW_HEIGHT);
     newSelf.device = Device.init(allocator, &newSelf.window);
-    newSelf.pipeline = Pipeline.init(&newSelf.device, Pipeline.defaultPipelineConfigInfo(WINDOW_WIDTH, WINDOW_HEIGHT));
+    newSelf.pipeline = Pipeline.init(&newSelf.device, Pipeline.PipelineConfigInfo.default(WINDOW_WIDTH, WINDOW_HEIGHT));
     return newSelf;
 }
 
