@@ -52,7 +52,7 @@ pub fn main() !void {
 
     // c.glfwTerminate();
 
-    var app = Application.init();
+    var app = Application.init(std.heap.page_allocator);
     defer app.deinit();
 
     app.run();

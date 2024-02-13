@@ -46,3 +46,9 @@ pub fn shouldClose(self: Self) bool {
 pub fn pollEvents() void {
     c.glfwPollEvents();
 }
+
+pub fn createSurface(self: *Self, instance: c.VkInstance, surface: *c.VkSurfaceKHR) void {
+    if (c.glfwCreateWindowSurface(instance, self.window, null, surface) != c.VK_SUCCESS) {
+        @panic("Failed to create window surface");
+    }
+}
