@@ -38,8 +38,4 @@ pub fn main() !void {
     assert(shouldBe10 == 10.0);
     const asInt: i32 = @intFromFloat(shouldBe10);
     std.debug.print("lua number = {}\n", .{asInt});
-
-    // const num: u32 = @intCast(c.LUAJIT_MODE_ON);
-    // std.debug.print("erm {}\n", .{num});
-
 }

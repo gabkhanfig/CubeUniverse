@@ -17,82 +17,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // const src_module = b.addModule("src", .{
-    //     .source_file = .{ .path = "src/root.zig" },
-    // });
-    // exe.addModule("src", src_module);
-
-    // Add Vulkan dependency
-    // The vulkan sdk is required to be installed, along with the VK_SDK_PATH environment variable to be set
-    //const vk_lib_name = if (target.result.os.tag == .windows) "vulkan-1" else "vulkan"; // works in nighty 1200 and later
-    const vk_lib_name = "vulkan-1";
-    exe.linkSystemLibrary(vk_lib_name);
-    if (b.env_map.get("VK_SDK_PATH")) |path| {
-        exe.addLibraryPath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/lib", .{path}) catch @panic("Out of Memory") });
-        exe.addIncludePath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/include", .{path}) catch @panic("Out of Memory") });
-    }
-    // to add a module, do this
-    //exe.root_module.addImport("module name", module);
-
-    exe.addLibraryPath(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib"));
-    exe.addIncludePath(LazyPath.relative("thirdparty/glfw-zig/zig-out/include"));
-    exe.addObjectFile(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib/glfw.lib"));
-
-    // see thirdparty/glfw-zig/build.zig
-    exe.linkSystemLibrary("gdi32");
-    exe.linkSystemLibrary("user32");
-    exe.linkSystemLibrary("shell32");
-
-    exe.linkLibC();
-    exe.linkLibCpp();
-
-    const flags = [_][]const u8{};
-
-    // vma
-    exe.addIncludePath(LazyPath.relative("thirdparty/vma"));
-    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/vma/vk_mem_alloc.cpp"), .flags = &flags });
-
-    // stb_image
-    exe.addIncludePath(LazyPath.relative("thirdparty/stb"));
-    exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/stb/stb_image.c"), .flags = &flags });
-
-    // SDL2
-    // exe.addLibraryPath(LazyPath.relative("thirdparty/sdl/build/Release"));
-    // exe.addIncludePath(LazyPath.relative("thirdparty/sdl/include"));
-    // exe.addObjectFile(LazyPath.relative("thirdparty/sdl/build/Release/SDL2.lib")); // ImGui needs this. Perhaps make ImGui a static library with SDL?
-    // if (target.result.os.tag == .windows) {
-    //     b.installBinFile("thirdparty/sdl/build/Release/SDL2.dll", "SDL2.dll");
-    // } else {
-    //     b.installBinFile("thirdparty/sdl3/lib/libSDL2.so", "libSDL2.so.0");
-    //     exe.root_module.addRPathSpecial("$ORIGIN");
-    // }
-
-    // imgui
-    // https://github.com/dearimgui/dear_bindings?tab=readme-ov-file
-    //const imgui = b.addModule("imgui", .{ .root_source_file = LazyPath.relative("thirdparty/imgui/zig_imgui.zig") });
-
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_demo.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_draw.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_tables.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_widgets.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/imgui_impl_sdlrenderer2.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/imgui_impl_vulkan.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/cimgui.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/cimgui_impl_sdlrenderer2.cpp"), .flags = &flags });
-    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/cimgui_impl_vulkan.cpp"), .flags = &flags });
-
-    // exe.addIncludePath(LazyPath.relative("thirdparty/imgui"));
-
-    // LuaJIT
-    // https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html
-    exe.addLibraryPath(LazyPath.relative("thirdparty/LuaJIT/src/"));
-    exe.addIncludePath(LazyPath.relative("thirdparty/LuaJIT/src/"));
-    if (target.result.os.tag == .windows) {
-        exe.addObjectFile(LazyPath.relative("thirdparty/LuaJIT/src/libluajit-5.1.dll.a"));
-        b.installBinFile("thirdparty/LuaJIT/src/lua51.dll", "lua51.dll");
-    } else {}
+    linkAndIncludeCLibs(target, b, exe);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -129,6 +54,10 @@ pub fn build(b: *std.Build) void {
     });
     //exe_unit_tests.addModule("src", src_module);
 
+    // Currently not working properly to link the c libraries?
+    // As long as a test doesn't use a c .lib or .dll or .a it should be fine.
+    //linkAndIncludeCLibs(target, b, exe_unit_tests);
+
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
 
     // Similar to creating the run step earlier, this exposes a `test` step to
@@ -136,4 +65,68 @@ pub fn build(b: *std.Build) void {
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
+}
+
+fn linkAndIncludeCLibs(target: std.Build.ResolvedTarget, b: *std.Build, artifact: *std.Build.Step.Compile) void {
+    artifact.linkLibC();
+    artifact.linkLibCpp();
+
+    // Add Vulkan dependency
+    // The vulkan sdk is required to be installed, along with the VK_SDK_PATH environment variable to be set
+    //const vk_lib_name = if (target.result.os.tag == .windows) "vulkan-1" else "vulkan"; // works in nighty 1200 and later
+    const vk_lib_name = "vulkan-1";
+    artifact.linkSystemLibrary(vk_lib_name);
+    if (b.env_map.get("VK_SDK_PATH")) |path| {
+        artifact.addLibraryPath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/lib", .{path}) catch @panic("Out of Memory") });
+        artifact.addIncludePath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/include", .{path}) catch @panic("Out of Memory") });
+    }
+    // to add a module, do this
+    //exe.root_module.addImport("module name", module);
+
+    artifact.addLibraryPath(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib"));
+    artifact.addIncludePath(LazyPath.relative("thirdparty/glfw-zig/zig-out/include"));
+    artifact.addObjectFile(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib/glfw.lib"));
+
+    // see thirdparty/glfw-zig/build.zig
+    artifact.linkSystemLibrary("gdi32");
+    artifact.linkSystemLibrary("user32");
+    artifact.linkSystemLibrary("shell32");
+
+    const flags = [_][]const u8{};
+
+    // vma
+    artifact.addIncludePath(LazyPath.relative("thirdparty/vma"));
+    artifact.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/vma/vk_mem_alloc.cpp"), .flags = &flags });
+
+    // stb_image
+    artifact.addIncludePath(LazyPath.relative("thirdparty/stb"));
+    artifact.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/stb/stb_image.c"), .flags = &flags });
+
+    // LuaJIT
+    // https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html
+    artifact.addLibraryPath(LazyPath.relative("thirdparty/LuaJIT/src/"));
+    artifact.addIncludePath(LazyPath.relative("thirdparty/LuaJIT/src/"));
+    if (target.result.os.tag == .windows) {
+        artifact.addObjectFile(LazyPath.relative("thirdparty/LuaJIT/src/libluajit-5.1.dll.a"));
+        b.installBinFile("thirdparty/LuaJIT/src/lua51.dll", "lua51.dll");
+    } else {}
+
+    // TODO add glfw backend
+    // imgui
+    // https://github.com/dearimgui/dear_bindings?tab=readme-ov-file
+    //const imgui = b.addModule("imgui", .{ .root_source_file = LazyPath.relative("thirdparty/imgui/zig_imgui.zig") });
+
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_demo.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_draw.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_tables.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui_widgets.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/imgui_impl_sdlrenderer2.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/imgui_impl_vulkan.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/imgui.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/cimgui.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/cimgui_impl_sdlrenderer2.cpp"), .flags = &flags });
+    // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/cimgui_impl_vulkan.cpp"), .flags = &flags });
+
+    // exe.addIncludePath(LazyPath.relative("thirdparty/imgui"));
 }
