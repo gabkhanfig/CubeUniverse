@@ -10,6 +10,20 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const engine_shared_lib = b.addSharedLibrary(.{
+        .name = "CubeUniverseEngine",
+        .root_source_file = .{ .path = "src/engine_entry.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
+
+    linkAndIncludeCLibs(target, b, engine_shared_lib);
+    if (target.result.os.tag == .windows) {
+        b.installBinFile("thirdparty/LuaJIT/src/lua51.dll", "lua51.dll");
+        b.installBinFile("zig-out/lib/CubeUniverseEngine.dll", "CubeUniverseEngine.dll");
+    }
+    b.installArtifact(engine_shared_lib);
+
     const exe = b.addExecutable(.{
         .name = "CubeUniverse",
         .root_source_file = .{ .path = "src/main.zig" },
@@ -17,7 +31,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    linkAndIncludeCLibs(target, b, exe);
+    exe.linkLibrary(engine_shared_lib);
+
+    //linkAndIncludeCLibs(target, b, exe);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -108,7 +124,7 @@ fn linkAndIncludeCLibs(target: std.Build.ResolvedTarget, b: *std.Build, artifact
     artifact.addIncludePath(LazyPath.relative("thirdparty/LuaJIT/src/"));
     if (target.result.os.tag == .windows) {
         artifact.addObjectFile(LazyPath.relative("thirdparty/LuaJIT/src/libluajit-5.1.dll.a"));
-        b.installBinFile("thirdparty/LuaJIT/src/lua51.dll", "lua51.dll");
+        //b.installBinFile("thirdparty/LuaJIT/src/lua51.dll", "lua51.dll");
     } else {}
 
     // TODO add glfw backend
