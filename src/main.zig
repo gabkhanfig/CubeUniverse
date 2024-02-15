@@ -16,10 +16,6 @@ const Application = @import("shared/Application.zig");
 
 const assert = std.debug.assert;
 
-//extern fn luaL_newstate() ?*c.lua_State;
-// extern fn _luaL_openlibs(?*c.lua_State) void;
-// extern fn _luaL_dofile(?*c.lua_State, [*c]const u8) c_int;
-
 pub fn main() !void {
     // var app = Application.init(std.heap.page_allocator);
     // defer app.deinit();
