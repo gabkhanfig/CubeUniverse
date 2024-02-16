@@ -12,5 +12,4 @@ comptime {
     _ = @import("shared/engine/math/detail/vector2.zig");
     _ = @import("shared/engine/math/detail/vector3.zig");
     _ = @import("shared/engine/math/detail/vector4.zig");
-    //_ = @import("shared/engine/script/lua/luajit.zig");
 }

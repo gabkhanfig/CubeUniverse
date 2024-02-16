@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) void {
 
     const engine_shared_lib = b.addSharedLibrary(.{
         .name = "CubeUniverseEngine",
-        .root_source_file = .{ .path = "src/engine_entry.zig" },
+        .root_source_file = .{ .path = "src/engine/engine.zig" },
         .target = target,
         .optimize = optimize,
     });
@@ -63,24 +63,32 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const exe_unit_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/tests.zig" },
+    const engine_unit_tests = b.addTest(.{
+        .root_source_file = .{ .path = "src/engine/engine_unit_tests.zig" },
         .target = target,
         .optimize = optimize,
     });
-    //exe_unit_tests.addModule("src", src_module);
 
-    // Currently not working properly to link the c libraries?
-    // As long as a test doesn't use a c .lib or .dll or .a it should be fine.
-    //linkAndIncludeCLibs(target, b, exe_unit_tests);
+    // TODO determine optimal way to link c libraries. Maybe link against the engine dll, or something else?
+    const engine_system_tests = b.addExecutable(.{
+        .name = "CubeUniverseSystemTests",
+        .root_source_file = .{ .path = "src/engine/engine_system_tests.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
 
-    const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
+    // NOTE Unit tests are unable to link to the DLL. Likely a bug?
+    //exe_unit_tests.linkLibrary(engine_shared_lib);
+
+    const run_engine_unit_tests = b.addRunArtifact(engine_unit_tests);
+    const run_engine_system_tests = b.addRunArtifact(engine_system_tests);
 
     // Similar to creating the run step earlier, this exposes a `test` step to
     // the `zig build --help` menu, providing a way for the user to request
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&run_exe_unit_tests.step);
+    test_step.dependOn(&run_engine_unit_tests.step);
+    test_step.dependOn(&run_engine_system_tests.step);
 }
 
 fn linkAndIncludeCLibs(target: std.Build.ResolvedTarget, b: *std.Build, artifact: *std.Build.Step.Compile) void {
