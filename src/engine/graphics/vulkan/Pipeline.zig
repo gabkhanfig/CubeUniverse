@@ -54,13 +54,20 @@ pub fn init(device: *Device, configInfo: PipelineConfigInfo) Self {
     vertexInputInfo.pVertexAttributeDescriptions = null;
     vertexInputInfo.pVertexBindingDescriptions = null;
 
+    var viewportInfo: c.VkPipelineViewportStateCreateInfo = .{};
+    viewportInfo.sType = c.VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportInfo.viewportCount = 1;
+    viewportInfo.pViewports = &configInfo.viewport;
+    viewportInfo.scissorCount = 1;
+    viewportInfo.pScissors = &configInfo.scissor;
+
     var pipelineInfo: c.VkGraphicsPipelineCreateInfo = .{};
     pipelineInfo.sType = c.VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = 2;
     pipelineInfo.pStages = &shaderStages;
     pipelineInfo.pVertexInputState = &vertexInputInfo;
     pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
-    pipelineInfo.pViewportState = &configInfo.viewportInfo;
+    pipelineInfo.pViewportState = &viewportInfo;
     pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
     pipelineInfo.pMultisampleState = &configInfo.multisampleInfo;
     pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
@@ -108,7 +115,6 @@ fn createShaderModule(self: *Self, code: [:0]const u8, shaderModule: *c.VkShader
 pub const PipelineConfigInfo = extern struct {
     viewport: c.VkViewport,
     scissor: c.VkRect2D,
-    viewportInfo: c.VkPipelineViewportStateCreateInfo,
     inputAssemblyInfo: c.VkPipelineInputAssemblyStateCreateInfo,
     rasterizationInfo: c.VkPipelineRasterizationStateCreateInfo,
     multisampleInfo: c.VkPipelineMultisampleStateCreateInfo,
@@ -123,7 +129,6 @@ pub const PipelineConfigInfo = extern struct {
         var configInfo = PipelineConfigInfo{
             .viewport = .{},
             .scissor = .{},
-            .viewportInfo = .{},
             .inputAssemblyInfo = .{},
             .rasterizationInfo = .{},
             .multisampleInfo = .{},
@@ -145,12 +150,6 @@ pub const PipelineConfigInfo = extern struct {
 
         configInfo.scissor.offset = .{ .x = 0, .y = 0 };
         configInfo.scissor.extent = .{ .width = 0, .height = 0 };
-
-        configInfo.viewportInfo.sType = c.VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        configInfo.viewportInfo.viewportCount = 1;
-        configInfo.viewportInfo.pViewports = &configInfo.viewport; // NOTE will this work properly? Due to using stack memory?
-        configInfo.viewportInfo.scissorCount = 1;
-        configInfo.viewportInfo.pScissors = &configInfo.scissor;
 
         configInfo.rasterizationInfo.sType = c.VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         configInfo.rasterizationInfo.depthClampEnable = c.VK_FALSE;
