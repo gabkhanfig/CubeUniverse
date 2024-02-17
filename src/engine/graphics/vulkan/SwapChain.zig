@@ -291,6 +291,8 @@ fn createDepthResources(self: *Self) void {
     self.depthImageViews = ArrayList(c.VkImageView).initCapacity(self.allocator, imgCount) catch unreachable;
     self.depthImageViews.items.len = imgCount;
 
+    //std.debug.print("imgCount: {}\n", .{imgCount});
+
     for (0..imgCount) |i| {
         var imageInfo: c.VkImageCreateInfo = .{};
         imageInfo.sType = c.VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -308,7 +310,13 @@ fn createDepthResources(self: *Self) void {
         imageInfo.sharingMode = c.VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.flags = 0;
 
-        self.device.createImageWithInfo(imageInfo, c.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &self.depthImages.items[i], self.depthImageMemorys.items[i]);
+        // var asAddress: usize = @intFromPtr(self.depthImageMemorys.items[i]);
+        // std.debug.print("before create image: {}\n", .{asAddress});
+
+        self.device.createImageWithInfo(imageInfo, c.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &self.depthImages.items[i], &self.depthImageMemorys.items[i]);
+
+        // asAddress = @intFromPtr(self.depthImageMemorys.items[i]);
+        // std.debug.print("after create image: {}\n", .{asAddress});
 
         var viewInfo: c.VkImageViewCreateInfo = .{};
         viewInfo.sType = c.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

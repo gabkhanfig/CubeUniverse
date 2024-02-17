@@ -35,6 +35,8 @@ pub fn init(allocator: Allocator) *Self {
 }
 
 pub fn deinit(self: *Self) void {
+    c.vkDestroyPipelineLayout(self.device.device, self.pipelineLayout, null);
+
     self.window.deinit();
     self.pipeline.deinit();
     self.swapChain.deinit();

@@ -195,12 +195,10 @@ pub const Device = struct {
         self.endSingleTimeCommands(commandBuffer);
     }
 
-    pub fn createImageWithInfo(self: *Self, imageInfo: c.VkImageCreateInfo, properties: c.VkMemoryPropertyFlags, image: *c.VkImage, imageMemory: c.VkDeviceMemory) void {
+    pub fn createImageWithInfo(self: *Self, imageInfo: c.VkImageCreateInfo, properties: c.VkMemoryPropertyFlags, image: *c.VkImage, imageMemory: *c.VkDeviceMemory) void {
         if (c.vkCreateImage(self.device, &imageInfo, null, image) != VK_SUCCESS) {
             @panic("Failed to create image");
         }
-
-        var imgMemory = imageMemory; // mutable copy of immutable function parameter
 
         var memRequirements: c.VkMemoryRequirements = .{};
         c.vkGetImageMemoryRequirements(self.device, image.*, &memRequirements);
@@ -210,11 +208,11 @@ pub const Device = struct {
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = self.findMemoryType(memRequirements.memoryTypeBits, properties);
 
-        if (c.vkAllocateMemory(self.device, &allocInfo, null, &imgMemory) != VK_SUCCESS) {
+        if (c.vkAllocateMemory(self.device, &allocInfo, null, imageMemory) != VK_SUCCESS) {
             @panic("Failed to allocate image memory!");
         }
 
-        if (c.vkBindImageMemory(self.device, image.*, imgMemory, 0) != VK_SUCCESS) {
+        if (c.vkBindImageMemory(self.device, image.*, imageMemory.*, 0) != VK_SUCCESS) {
             @panic("Failed to bind image memory!");
         }
     }
