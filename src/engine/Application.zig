@@ -60,7 +60,6 @@ fn createPipelineLayout(self: *Self) void {
     if (c.vkCreatePipelineLayout(self.device.device, &pipelineLayoutInfo, null, &self.pipelineLayout) != c.VK_SUCCESS) {
         @panic("Failed to create pipeline layout!");
     }
-    //std.debug.assert(self.pipelineLayout != null);
 }
 
 fn createPipeline(self: *Self) void {
