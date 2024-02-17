@@ -71,7 +71,7 @@ pub const Device = struct {
     }
 
     pub fn getSwapChainSupport(self: *Self) SwapChainSupportDetails {
-        return querySwapChainSupport(self.physicalDevice, self.allocator);
+        return querySwapChainSupport(self.physicalDevice, self.surface, self.allocator);
     }
 
     pub fn findMemoryType(self: *Self, typeFilter: u32, properties: c.VkMemoryPropertyFlags) u32 {
@@ -79,8 +79,8 @@ pub const Device = struct {
         c.vkGetPhysicalDeviceMemoryProperties(self.physicalDevice, &memProperties);
         for (0..memProperties.memoryTypeCount) |i| {
             const bitshift: u5 = @intCast(i);
-            if ((typeFilter & @shrExact(@as(u32, 1), bitshift)) and (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-                return i;
+            if ((typeFilter & @shlExact(@as(u32, 1), bitshift) != 0) and (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+                return @intCast(i);
             }
         }
 
@@ -196,23 +196,25 @@ pub const Device = struct {
     }
 
     pub fn createImageWithInfo(self: *Self, imageInfo: c.VkImageCreateInfo, properties: c.VkMemoryPropertyFlags, image: *c.VkImage, imageMemory: c.VkDeviceMemory) void {
-        if (c.vkCreateImage(self.device, &imageInfo, null, &image) != VK_SUCCESS) {
+        if (c.vkCreateImage(self.device, &imageInfo, null, image) != VK_SUCCESS) {
             @panic("Failed to create image");
         }
 
+        var imgMemory = imageMemory; // mutable copy of immutable function parameter
+
         var memRequirements: c.VkMemoryRequirements = .{};
-        c.vkGetImageMemoryRequirements(self.device, image, &memRequirements);
+        c.vkGetImageMemoryRequirements(self.device, image.*, &memRequirements);
 
         var allocInfo: c.VkMemoryAllocateInfo = .{};
         allocInfo.sType = c.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = self.findMemoryType(memRequirements.memoryTypeBits, properties);
 
-        if (c.vkAllocateMemory(self.device, &allocInfo, null, &imageMemory) != VK_SUCCESS) {
+        if (c.vkAllocateMemory(self.device, &allocInfo, null, &imgMemory) != VK_SUCCESS) {
             @panic("Failed to allocate image memory!");
         }
 
-        if (c.vkBindImageMemory(self.device, image, imageMemory, 0) != VK_SUCCESS) {
+        if (c.vkBindImageMemory(self.device, image.*, imgMemory, 0) != VK_SUCCESS) {
             @panic("Failed to bind image memory!");
         }
     }
