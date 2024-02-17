@@ -91,8 +91,8 @@ pub const Device = struct {
         return findQueueFamilies(self.physicalDevice, self.surface, self.allocator);
     }
 
-    pub fn findSupportedFormat(self: *Self, candidates: ArrayList(c.VkFormat), tiling: c.VkImageTiling, features: c.VkFormatFeatureFlags) c.VkFormat {
-        for (candidates.items) |format| {
+    pub fn findSupportedFormat(self: *Self, candidates: []c.VkFormat, tiling: c.VkImageTiling, features: c.VkFormatFeatureFlags) c.VkFormat {
+        for (candidates) |format| {
             var props: c.VkFormatProperties = .{};
             c.vkGetPhysicalDeviceFormatProperties(self.physicalDevice, format, &props);
 
