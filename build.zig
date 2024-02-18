@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) void {
 
     const engine_shared_lib = b.addSharedLibrary(.{
         .name = "CubeUniverseEngine",
-        .root_source_file = .{ .path = "src/engine/engine.zig" },
+        .root_source_file = .{ .path = "src/engine/engine_entry.zig" },
         .target = target,
         .optimize = optimize,
     });

@@ -5,7 +5,7 @@
 
 // const std = @import("std");
 
-// See engine/engine.zig
+// See engine/engine_entry.zig
 extern fn cubeUniverseEngineEntry() void;
 
 pub fn main() !void {
