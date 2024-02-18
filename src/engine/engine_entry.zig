@@ -3,6 +3,11 @@ const assert = std.debug.assert;
 const c = @import("clibs.zig");
 const Application = @import("Application.zig");
 
+fn errorCallback(err: c_int, description: [*]const u8) void {
+    _ = err;
+    std.debug.print("Glfw error: {s}", .{description});
+}
+
 export fn cubeUniverseEngineEntry() void {
     // const file = @embedFile("shared/engine/script/lua/test_return_number.lua");
 
@@ -17,8 +22,32 @@ export fn cubeUniverseEngineEntry() void {
     // const asInt: i32 = @intFromFloat(shouldBe10);
     // std.debug.print("lua number = {}\n", .{asInt});
 
-    var app = Application.init(std.heap.page_allocator);
-    defer app.deinit();
+    // var app = Application.init(std.heap.page_allocator);
+    // defer app.deinit();
 
-    app.run();
+    // app.run();
+
+    if (c.glfwInit() == c.GLFW_FALSE) {
+        @panic("Failed to initialize glfw!");
+    }
+
+    const createWindow = c.glfwCreateWindow(640, 480, "Hello World", null, null);
+    if (createWindow == null) {
+        c.glfwTerminate();
+        @panic("Failed to create glfw window");
+    }
+
+    c.glfwMakeContextCurrent(createWindow);
+
+    _ = c.gladLoadGL();
+
+    while (c.glfwWindowShouldClose(createWindow) != c.GLFW_TRUE) {
+        c.glfwPollEvents();
+
+        c.glClear(c.GL_COLOR_BUFFER_BIT);
+
+        c.glfwSwapBuffers(createWindow);
+    }
+
+    c.glfwTerminate();
 }

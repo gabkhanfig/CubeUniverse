@@ -92,35 +92,27 @@ pub fn build(b: *std.Build) void {
 }
 
 fn linkAndIncludeCLibs(target: std.Build.ResolvedTarget, b: *std.Build, artifact: *std.Build.Step.Compile) void {
+    _ = b;
+    const flags = [_][]const u8{};
+    // to add a module, do this
+    //artifact.root_module.addImport("module name", module);
+
     artifact.linkLibC();
     artifact.linkLibCpp();
 
-    // Add Vulkan dependency
-    // The vulkan sdk is required to be installed, along with the VK_SDK_PATH environment variable to be set
-    //const vk_lib_name = if (target.result.os.tag == .windows) "vulkan-1" else "vulkan"; // works in nighty 1200 and later
-    const vk_lib_name = "vulkan-1";
-    artifact.linkSystemLibrary(vk_lib_name);
-    if (b.env_map.get("VK_SDK_PATH")) |path| {
-        artifact.addLibraryPath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/lib", .{path}) catch @panic("Out of Memory") });
-        artifact.addIncludePath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/include", .{path}) catch @panic("Out of Memory") });
-    }
-    // to add a module, do this
-    //exe.root_module.addImport("module name", module);
+    // OpenGL
+    artifact.linkSystemLibrary("opengl32");
+    artifact.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/opengl/glad.c"), .flags = &flags });
+    artifact.addIncludePath(LazyPath.relative("thirdparty/opengl"));
 
-    artifact.addLibraryPath(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib"));
-    artifact.addIncludePath(LazyPath.relative("thirdparty/glfw-zig/zig-out/include"));
-    artifact.addObjectFile(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib/glfw.lib"));
-
-    // see thirdparty/glfw-zig/build.zig
     artifact.linkSystemLibrary("gdi32");
     artifact.linkSystemLibrary("user32");
     artifact.linkSystemLibrary("shell32");
 
-    const flags = [_][]const u8{};
-
-    // vma
-    artifact.addIncludePath(LazyPath.relative("thirdparty/vma"));
-    artifact.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/vma/vk_mem_alloc.cpp"), .flags = &flags });
+    // GLFW
+    artifact.addLibraryPath(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib"));
+    artifact.addIncludePath(LazyPath.relative("thirdparty/glfw-zig/zig-out/include"));
+    artifact.addObjectFile(LazyPath.relative("thirdparty/glfw-zig/zig-out/lib/glfw.lib"));
 
     // stb_image
     artifact.addIncludePath(LazyPath.relative("thirdparty/stb"));
@@ -132,7 +124,7 @@ fn linkAndIncludeCLibs(target: std.Build.ResolvedTarget, b: *std.Build, artifact
     artifact.addIncludePath(LazyPath.relative("thirdparty/LuaJIT/src/"));
     if (target.result.os.tag == .windows) {
         artifact.addObjectFile(LazyPath.relative("thirdparty/LuaJIT/src/libluajit-5.1.dll.a"));
-        //b.installBinFile("thirdparty/LuaJIT/src/lua51.dll", "lua51.dll");
+        // lua51.dll is handled seperately by build.zig
     } else {}
 
     // TODO add glfw backend
@@ -153,4 +145,18 @@ fn linkAndIncludeCLibs(target: std.Build.ResolvedTarget, b: *std.Build, artifact
     // exe.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/imgui/backends/cimgui_impl_vulkan.cpp"), .flags = &flags });
 
     // exe.addIncludePath(LazyPath.relative("thirdparty/imgui"));
+
+    // Add Vulkan dependency
+    // The vulkan sdk is required to be installed, along with the VK_SDK_PATH environment variable to be set
+    //const vk_lib_name = if (target.result.os.tag == .windows) "vulkan-1" else "vulkan"; // works in nighty 1200 and later
+    // const vk_lib_name = "vulkan-1";
+    // artifact.linkSystemLibrary(vk_lib_name);
+    // if (b.env_map.get("VK_SDK_PATH")) |path| {
+    //     artifact.addLibraryPath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/lib", .{path}) catch @panic("Out of Memory") });
+    //     artifact.addIncludePath(.{ .cwd_relative = std.fmt.allocPrint(b.allocator, "{s}/include", .{path}) catch @panic("Out of Memory") });
+    // }
+
+    // vma
+    // artifact.addIncludePath(LazyPath.relative("thirdparty/vma"));
+    // artifact.addCSourceFile(.{ .file = LazyPath.relative("thirdparty/vma/vk_mem_alloc.cpp"), .flags = &flags });
 }
