@@ -149,6 +149,8 @@ const JobSystemImpl = struct {
 pub const JobThread = struct {
     const Self = @This();
 
+    threadId: Thread.Id = 0,
+
     isExecuting: Atomic(bool) = Atomic(bool).init(false),
     shouldExecute: Atomic(bool) = Atomic(bool).init(false),
     isPendingKill: Atomic(bool) = Atomic(bool).init(false),
@@ -206,6 +208,7 @@ pub const JobThread = struct {
     }
 
     fn threadLoop(self: *Self) void {
+        self.threadId = Thread.getCurrentId();
         while (self.isPendingKill.load(AtomicOrder.Acquire) == false) {
             self.queueMutex.lock();
             if (self.queue.len != 0) { // has jobs
