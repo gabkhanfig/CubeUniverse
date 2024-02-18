@@ -29,7 +29,7 @@ pub fn init(allocator: Allocator) *Self {
 
     newSelf.createPipelineLayout();
     newSelf.createPipeline();
-    //newSelf.createCommandBuffers(); TODO this
+    newSelf.createCommandBuffers();
 
     return newSelf;
 }
@@ -49,7 +49,10 @@ pub fn deinit(self: *Self) void {
 pub fn run(self: *Self) void {
     while (!self.window.shouldClose()) {
         Window.pollEvents();
+        self.drawFrame();
     }
+
+    _ = c.vkDeviceWaitIdle(self.device.device);
 }
 
 fn createPipelineLayout(self: *Self) void {
@@ -72,9 +75,69 @@ fn createPipeline(self: *Self) void {
 }
 
 fn createCommandBuffers(self: *Self) void {
-    _ = self;
+    self.commandBuffers = ArrayList(c.VkCommandBuffer).initCapacity(self.allocator, self.swapChain.imageCount()) catch unreachable;
+    self.commandBuffers.items.len = self.swapChain.imageCount();
+
+    var allocInfo: c.VkCommandBufferAllocateInfo = .{};
+    allocInfo.sType = c.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = c.VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = self.device.commandPool;
+    allocInfo.commandBufferCount = @intCast(self.commandBuffers.items.len);
+
+    if (c.vkAllocateCommandBuffers(self.device.device, &allocInfo, self.commandBuffers.items.ptr) != c.VK_SUCCESS) {
+        @panic("Failed to create command buffers!");
+    }
+
+    for (0..self.commandBuffers.items.len) |i| {
+        var beginInfo: c.VkCommandBufferBeginInfo = .{};
+        beginInfo.sType = c.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        if (c.vkBeginCommandBuffer(self.commandBuffers.items[i], &beginInfo) != c.VK_SUCCESS) {
+            @panic("Failed to begin recording command buffer!");
+        }
+
+        var renderPassInfo: c.VkRenderPassBeginInfo = .{};
+        renderPassInfo.sType = c.VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = self.swapChain.renderPass;
+        renderPassInfo.framebuffer = self.swapChain.getFrameBuffer(i);
+
+        renderPassInfo.renderArea.offset = .{ .x = 0, .y = 0 };
+        renderPassInfo.renderArea.extent = .{ .width = @intCast(self.swapChain.width()), .height = @intCast(self.swapChain.height()) };
+
+        // NOTE For the framebuffer,
+        // index 0 -> color attachment
+        // index 1 -> depth attachment
+        var clearValues: [2]c.VkClearValue = undefined;
+        clearValues[0].color = c.VkClearColorValue{ .float32 = .{ 0.1, 0.1, 0.1, 1.0 } };
+        clearValues[1].depthStencil = .{ .depth = 1.0, .stencil = 0 };
+
+        renderPassInfo.clearValueCount = @intCast(clearValues.len);
+        renderPassInfo.pClearValues = &clearValues;
+
+        c.vkCmdBeginRenderPass(self.commandBuffers.items[i], &renderPassInfo, c.VK_SUBPASS_CONTENTS_INLINE);
+
+        self.pipeline.bind(self.commandBuffers.items[i]);
+        c.vkCmdDraw(self.commandBuffers.items[i], 3, 1, 0, 0);
+
+        c.vkCmdEndRenderPass(self.commandBuffers.items[i]);
+        if (c.vkEndCommandBuffer(self.commandBuffers.items[i]) != c.VK_SUCCESS) {
+            @panic("Failed to record command buffer!");
+        }
+    }
 }
 
 fn drawFrame(self: *Self) void {
-    _ = self; // TODO draw frame
+    //std.debug.print("drawing frame... {}\n", .{c.glfwGetTime()});
+
+    var imageIndex: u32 = undefined;
+    var result = self.swapChain.acquireNextImage(&imageIndex);
+
+    if (result != c.VK_SUCCESS and result != c.VK_SUBOPTIMAL_KHR) {
+        @panic("Failed to acquire the next swap chain image!");
+    }
+
+    result = self.swapChain.submitCommandBuffers(&self.commandBuffers.items[imageIndex], &imageIndex);
+    if (result != c.VK_SUCCESS) {
+        @panic("Failed to present swap chain image!");
+    }
 }

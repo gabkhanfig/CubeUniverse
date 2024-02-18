@@ -91,11 +91,11 @@ pub fn deinit(self: *Self) void {
 }
 
 pub fn getFrameBuffer(self: Self, index: usize) c.VkFramebuffer {
-    return self.swapChainFrameBuffers[index];
+    return self.swapChainFramebuffers.items[index];
 }
 
 pub fn getImageView(self: Self, index: usize) c.VkImageView {
-    return self.swapChainImageViews[index];
+    return self.swapChainImageViews.items[index];
 }
 
 pub fn imageCount(self: Self) usize {
@@ -131,12 +131,11 @@ pub fn findDepthFormat(self: *Self) c.VkFormat {
     );
 }
 
-// NOTE Why is `imageIndex` a pointer?
 pub fn acquireNextImage(self: *Self, imageIndex: *u32) c.VkResult {
-    c.vkWaitForFences(
+    _ = c.vkWaitForFences(
         self.device.device,
         1,
-        &self.inFlightFences[self.currentFrame],
+        &self.inFlightFences.items[self.currentFrame],
         c.VK_TRUE,
         std.math.maxInt(u64),
     );
@@ -145,25 +144,24 @@ pub fn acquireNextImage(self: *Self, imageIndex: *u32) c.VkResult {
         self.device.device,
         self.swapChain,
         std.math.maxInt(u64),
-        self.imageAvailableSemaphores[self.currentFrame],
-        c.VK_NULL_HANDLE,
+        self.imageAvailableSemaphores.items[self.currentFrame],
+        null,
         imageIndex,
     );
 
     return result;
 }
 
-// NOTE Why is `imageIndex` a pointer?
 pub fn submitCommandBuffers(self: *Self, buffers: *const c.VkCommandBuffer, imageIndex: *u32) c.VkResult {
-    if (self.imagesInFlight[imageIndex.*] != c.VK_NULL_HANDLE) {
-        c.vkWaitForFences(self.device.device, 1, &self.imagesInFlight[imageIndex.*], c.VK_TRUE, std.math.maxInt(u64));
+    if (self.imagesInFlight.items[imageIndex.*] != null) {
+        _ = c.vkWaitForFences(self.device.device, 1, &self.imagesInFlight.items[imageIndex.*], c.VK_TRUE, std.math.maxInt(u64));
     }
-    self.imagesInFlight[imageIndex.*] = self.inFlightFences[self.currentFrame];
+    self.imagesInFlight.items[imageIndex.*] = self.inFlightFences.items[self.currentFrame];
 
     var submitInfo: c.VkSubmitInfo = .{};
-    submitInfo.sType = c.VK_STRUCTURE_tYPE_SUBMIT_INFO;
+    submitInfo.sType = c.VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    const waitSemaphores: [1]c.VkSemaphore = .{self.imageAvailableSemaphores[self.currentFrame]};
+    const waitSemaphores: [1]c.VkSemaphore = .{self.imageAvailableSemaphores.items[self.currentFrame]};
     const waitStages: [1]c.VkPipelineStageFlags = .{c.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = &waitSemaphores;
@@ -172,12 +170,12 @@ pub fn submitCommandBuffers(self: *Self, buffers: *const c.VkCommandBuffer, imag
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = buffers;
 
-    const signalSemaphores: [1]c.VkSemaphore = .{self.renderFinishedSemaphores[self.currentFrame]};
+    const signalSemaphores: [1]c.VkSemaphore = .{self.renderFinishedSemaphores.items[self.currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &signalSemaphores;
 
-    c.vkResetFences(self.device.device, 1, &self.inFlightFences[self.currentFrame]);
-    if (c.vkQueueSubmit(self.device.graphicsQueue, 1, submitInfo, self.inFlightFences[self.currentFrame]) != c.VK_SUCCESS) {
+    _ = c.vkResetFences(self.device.device, 1, &self.inFlightFences.items[self.currentFrame]);
+    if (c.vkQueueSubmit(self.device.graphicsQueue, 1, &submitInfo, self.inFlightFences.items[self.currentFrame]) != c.VK_SUCCESS) {
         @panic("Failed to submit draw command buffer");
     }
 
@@ -429,6 +427,9 @@ fn createSyncObjects(self: *Self) void {
 
     self.imagesInFlight = ArrayList(c.VkFence).initCapacity(self.allocator, self.imageCount()) catch unreachable;
     self.imagesInFlight.items.len = self.imageCount();
+    for (0..self.imagesInFlight.items.len) |i| {
+        self.imagesInFlight.items[i] = null;
+    }
 
     var semaphoreInfo: c.VkSemaphoreCreateInfo = .{};
     semaphoreInfo.sType = c.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;

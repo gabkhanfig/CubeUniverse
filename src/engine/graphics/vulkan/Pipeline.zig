@@ -94,6 +94,10 @@ pub fn deinit(self: Self) void {
     c.vkDestroyPipeline(self.device.device, self.graphicsPipeline, null);
 }
 
+pub fn bind(self: *Self, commandBuffer: c.VkCommandBuffer) void {
+    c.vkCmdBindPipeline(commandBuffer, c.VK_PIPELINE_BIND_POINT_GRAPHICS, self.graphicsPipeline);
+}
+
 fn createShaderModule(self: *Self, code: [:0]const u8, shaderModule: *c.VkShaderModule) void {
     var createInfo: c.VkShaderModuleCreateInfo = .{};
     createInfo.sType = c.VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
