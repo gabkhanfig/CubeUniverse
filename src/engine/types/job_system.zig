@@ -149,7 +149,7 @@ const JobSystemImpl = struct {
 pub const JobThread = struct {
     const Self = @This();
 
-    threadId: Thread.Id = 0,
+    threadId: Atomic(Thread.Id) = Atomic(Thread.Id).init(0),
 
     isExecuting: Atomic(bool) = Atomic(bool).init(false),
     shouldExecute: Atomic(bool) = Atomic(bool).init(false),
@@ -170,6 +170,7 @@ pub const JobThread = struct {
     pub fn init(allocator: *Allocator) !*JobThread {
         const jobThread = try allocator.create(Self);
         jobThread.* = .{ .allocator = allocator, .thread = try Thread.spawn(.{ .allocator = allocator.* }, Self.threadLoop, .{jobThread}) };
+        std.Thread.yield() catch unreachable;
         return jobThread;
     }
 
@@ -208,7 +209,7 @@ pub const JobThread = struct {
     }
 
     fn threadLoop(self: *Self) void {
-        self.threadId = Thread.getCurrentId();
+        self.threadId.store(Thread.getCurrentId(), std.builtin.AtomicOrder.Release);
         while (self.isPendingKill.load(AtomicOrder.Acquire) == false) {
             self.queueMutex.lock();
             if (self.queue.len != 0) { // has jobs
