@@ -18,11 +18,11 @@ pub fn build(b: *std.Build) void {
     });
 
     linkAndIncludeCLibs(target, b, engine_shared_lib);
+    b.installArtifact(engine_shared_lib);
     if (target.result.os.tag == .windows) {
         b.installBinFile("thirdparty/LuaJIT/src/lua51.dll", "lua51.dll");
         b.installBinFile("zig-out/lib/CubeUniverseEngine.dll", "CubeUniverseEngine.dll");
     }
-    b.installArtifact(engine_shared_lib);
 
     const exe = b.addExecutable(.{
         .name = "CubeUniverse",
