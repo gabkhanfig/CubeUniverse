@@ -67,6 +67,11 @@ namespace world {
 				check_le(inZ, 3);
 				this->value = (this->value & (0b11 << Z_SHIFT)) | (inZ << Z_SHIFT);
 			}
+
+			constexpr bool operator==(const Index& other) const {
+				return this->value == other.value;
+			}
+
 		}; // struct Index
 
 		constexpr TreeLayerIndices() 
@@ -106,7 +111,13 @@ namespace world {
 			this->values[valueIndex] = (this->values[valueIndex] & mask) | (indexAsU32 << bitshift);
 		}
 
+		constexpr bool operator==(const TreeLayerIndices& other) const {
+			return this->values[0] == other.values[0] && this->values[1] == other.values[1] && this->values[2] == other.values[2];
+		}
+
 		u32 values[3];
 		
-	}; // struct TreeLayerIndices
+
+		
+}; // struct TreeLayerIndices
 } // namespace world
