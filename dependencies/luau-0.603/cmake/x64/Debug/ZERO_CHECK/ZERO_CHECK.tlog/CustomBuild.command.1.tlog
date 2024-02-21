@@ -1,0 +1,10 @@
+^C:\USERS\ADMIN\DOCUMENTS\CODE\CUBEUNIVERSE\CUBEUNIVERSE\DEPENDENCIES\LUAU\CMAKE\CMAKEFILES\966189C721B3620E3F4A6AD515C8E593\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau -BC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake/Luau.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
