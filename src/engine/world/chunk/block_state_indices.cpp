@@ -451,6 +451,8 @@ void world::internal::BlockStateIndices::reallocate(const u16 uniqueBlockStates)
 
 #if WITH_TESTS
 
+using world::BlockIndex;
+using world::CHUNK_LENGTH;
 using namespace world::internal;
 
 static_assert(sizeof(BlockStateIndices) == 8);
@@ -459,5 +461,29 @@ static_assert(sizeof(BlockStateIndicesWidth2) == 8192);
 static_assert(sizeof(BlockStateIndicesWidth4) == 16384);
 static_assert(sizeof(BlockStateIndicesWidth8) == 32768);
 static_assert(sizeof(BlockStateIndicesWidth16) == 65536);
+
+test_case("block state indices 1 bit") {
+	BlockStateIndicesWidth1 indices;
+
+	check_eq(indices.indexAt(BlockIndex(0, 0, 0)), 0);
+	check_eq(indices.indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+	check_eq(indices.indexAt(BlockIndex(5, 14, 9)), 0);
+
+	indices.setIndexAt(1, BlockIndex(0, 0, 0));
+	indices.setIndexAt(1, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+	indices.setIndexAt(1, BlockIndex(5, 14, 9));
+
+	check_eq(indices.indexAt(BlockIndex(0, 0, 0)), 1);
+	check_eq(indices.indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 1);
+	check_eq(indices.indexAt(BlockIndex(5, 14, 9)), 1);
+
+	indices.setIndexAt(0, BlockIndex(0, 0, 0));
+	indices.setIndexAt(0, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+	indices.setIndexAt(0, BlockIndex(5, 14, 9));
+
+	check_eq(indices.indexAt(BlockIndex(0, 0, 0)), 0);
+	check_eq(indices.indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+	check_eq(indices.indexAt(BlockIndex(5, 14, 9)), 0);
+}
 
 #endif
