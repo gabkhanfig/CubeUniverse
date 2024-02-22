@@ -242,8 +242,8 @@ void world::internal::BlockStateIndices::setIndexAt(const u16 index, const Block
 
 	case IndexBitWidth::b16:
 		{
-			check_message(index < 256, "Not enough space reserved to fit `index`, please call BlockStateIndices::reserve()");
-			BlockStateIndicesWidth8* asWidth = static_cast<BlockStateIndicesWidth8*>(ptr);
+			check_message(index < CHUNK_SIZE, "Not enough space reserved to fit `index`, please call BlockStateIndices::reserve()");
+			BlockStateIndicesWidth16* asWidth = static_cast<BlockStateIndicesWidth16*>(ptr);
 			asWidth->setIndexAt(index, position);
 		}
 		break;
@@ -255,6 +255,8 @@ void world::internal::BlockStateIndices::setIndexAt(const u16 index, const Block
 
 void world::internal::BlockStateIndices::reserve(const u16 uniqueBlockStates)
 {
+	check_lt(uniqueBlockStates, world::CHUNK_SIZE);
+
 	if (!this->shouldReallocate(uniqueBlockStates)) {
 		return;
 	}
@@ -302,10 +304,10 @@ world::internal::BlockStateIndices::IndexBitWidth world::internal::BlockStateInd
 	else if (uniqueBlockStates > 16) {
 		return IndexBitWidth::b8;
 	}
-	else if (uniqueBlockStates > 8) {
+	else if (uniqueBlockStates > 4) {
 		return IndexBitWidth::b4;
 	}
-	else if (uniqueBlockStates > 4) {
+	else if (uniqueBlockStates > 2) {
 		return IndexBitWidth::b2;
 	}
 	else {
@@ -617,6 +619,70 @@ test_case("block state indices zero init") {
 	for (u16 i = 0; i < CHUNK_SIZE; i++) {
 		check_eq(indices.indexAt(BlockIndex::fromIndex(i)), 0);
 	}
+}
+
+test_case("block state indices set 1") {
+	BlockStateIndices indices;
+
+	indices.setIndexAt(1, BlockIndex(0, 0, 0));
+	indices.setIndexAt(1, BlockIndex(12, 11, 13));
+
+	check_eq(indices.indexAt(BlockIndex(0, 0, 0)), 1);
+	check_eq(indices.indexAt(BlockIndex(12, 11, 13)), 1);
+
+	indices.setIndexAt(0, BlockIndex(0, 0, 0));
+	indices.setIndexAt(0, BlockIndex(12, 11, 13));
+
+	check_eq(indices.indexAt(BlockIndex(0, 0, 0)), 0);
+	check_eq(indices.indexAt(BlockIndex(12, 11, 13)), 0);
+}
+
+test_case("block state indices reserve") {
+	BlockStateIndices indices;
+
+	auto testValue = [&](u16 i) {
+		indices.setIndexAt(i, BlockIndex(0, 0, 0));
+		indices.setIndexAt(i, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices.setIndexAt(i, BlockIndex(5, 14, 9));
+
+		check_eq(indices.indexAt(BlockIndex(0, 0, 0)), i);
+		check_eq(indices.indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), i);
+		check_eq(indices.indexAt(BlockIndex(5, 14, 9)), i);
+
+		indices.setIndexAt(0, BlockIndex(0, 0, 0));
+		indices.setIndexAt(0, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices.setIndexAt(0, BlockIndex(5, 14, 9));
+
+		check_eq(indices.indexAt(BlockIndex(0, 0, 0)), 0);
+		check_eq(indices.indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+		check_eq(indices.indexAt(BlockIndex(5, 14, 9)), 0);
+	};
+
+	indices.reserve(4);
+	for (u16 i = 0; i < 4; i++) {
+		testValue(i);
+	}
+
+	indices.reserve(16);
+	for (u16 i = 0; i < 16; i++) {
+		testValue(i);
+	}
+
+	indices.reserve(256);
+	for (u16 i = 0; i < 256; i++) {
+		testValue(i);
+	}
+
+	indices.reserve(CHUNK_SIZE - 1);
+	testValue(0);
+	testValue(1);
+	testValue(2);
+	testValue(5);
+	testValue(100);
+	testValue(3059);
+	testValue(10000);
+	testValue(CHUNK_SIZE / 2);
+	testValue(CHUNK_SIZE - 1);
 }
 
 #endif
