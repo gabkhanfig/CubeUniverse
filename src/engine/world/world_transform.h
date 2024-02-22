@@ -68,7 +68,7 @@ namespace world {
 			this->index = inX + (inZ * CHUNK_LENGTH) + (inY * CHUNK_LENGTH * CHUNK_LENGTH);
 		}
 
-		constexpr BlockIndex fromIndex(const u16 inIndex) {
+		static constexpr BlockIndex fromIndex(const u16 inIndex) {
 			check_lt(inIndex, CHUNK_SIZE);
 			BlockIndex ind;
 			ind.index = inIndex;
