@@ -8,7 +8,7 @@ namespace world {
 		/// Structure containing the indices of different block states within a chunk
 		/// Uses custom bit-widths to compress the used memory as aggressively as possible.
 		/// Uses more memory for more unique block states that a chunk owns.
-		/// Call `reserve()` to be able to hold more block states.
+		/// Call `reserve()` to be able to hold more block states. All indices are set to 0, to be an empty block state.
 		///
 		/// The size is 8 bytes for the `BlockStateIndices` itself, and then depending on the number of unique block states:
 		/// - Up to 2 => 4096 bytes

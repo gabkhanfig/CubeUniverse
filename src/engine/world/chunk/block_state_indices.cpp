@@ -25,9 +25,10 @@ void world::internal::BlockStateIndicesWidth1::setIndexAt(const u16 index, const
 
 	const usize arrayIndex = position.index % ARRAY_SIZE;
 	const usize indexCast = index;
-	const usize bitmask = indexCast << (position.index % 64);
+	const usize bitshift = position.index % 64;
+	const usize bitmask = indexCast << bitshift;
 
-	this->indices[arrayIndex] = (this->indices[arrayIndex] & ~bitmask) | bitmask;
+	this->indices[arrayIndex] = (this->indices[arrayIndex] & ~(0b1ULL << bitshift)) | bitmask;
 }
 
 u16 world::internal::BlockStateIndicesWidth2::indexAt(const BlockIndex position) const
