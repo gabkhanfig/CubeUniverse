@@ -104,7 +104,8 @@ world::internal::BlockStateIndices::BlockStateIndices()
 	auto allocator = gk::globalHeapAllocator();
 
 	const usize bitWidth = static_cast<usize>(IndexBitWidth::b1);
-	const void* indices = static_cast<void*>(allocator->mallocObject<BlockStateIndicesWidth1>().ok());
+	BlockStateIndicesWidth1* indices = allocator->mallocObject<BlockStateIndicesWidth1>().ok();
+	new (indices) BlockStateIndicesWidth1();
 	const usize indicesAsUsize = reinterpret_cast<usize>(indices);
 
 	this->taggedPtr = indicesAsUsize | (bitWidth << ENUM_SHIFT);
@@ -453,6 +454,7 @@ void world::internal::BlockStateIndices::reallocate(const u16 uniqueBlockStates)
 
 using world::BlockIndex;
 using world::CHUNK_LENGTH;
+using world::CHUNK_SIZE;
 using namespace world::internal;
 
 static_assert(sizeof(BlockStateIndices) == 8);
@@ -603,10 +605,18 @@ test_case("block state indices 16 bit") {
 	testValue(100);
 	testValue(3059);
 	testValue(10000);
-	testValue(world::CHUNK_SIZE / 2);
-	testValue(world::CHUNK_SIZE - 1);
+	testValue(CHUNK_SIZE / 2);
+	testValue(CHUNK_SIZE - 1);
 
 	delete indices;
+}
+
+test_case("block state indices zero init") {
+	BlockStateIndices indices;
+
+	for (u16 i = 0; i < CHUNK_SIZE; i++) {
+		check_eq(indices.indexAt(BlockIndex::fromIndex(i)), 0);
+	}
 }
 
 #endif
