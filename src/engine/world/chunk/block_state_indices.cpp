@@ -486,4 +486,127 @@ test_case("block state indices 1 bit") {
 	check_eq(indices.indexAt(BlockIndex(5, 14, 9)), 0);
 }
 
+test_case("block state indices 2 bit") {
+	BlockStateIndicesWidth2 indices;
+
+	check_eq(indices.indexAt(BlockIndex(0, 0, 0)), 0);
+	check_eq(indices.indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+	check_eq(indices.indexAt(BlockIndex(5, 14, 9)), 0);
+
+	// include max value
+	for (u16 i = 0; i <= BlockStateIndicesWidth2::MAX_VALUE; i++) {
+		indices.setIndexAt(i, BlockIndex(0, 0, 0));
+		indices.setIndexAt(i, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices.setIndexAt(i, BlockIndex(5, 14, 9));
+
+		check_eq(indices.indexAt(BlockIndex(0, 0, 0)), i);
+		check_eq(indices.indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), i);
+		check_eq(indices.indexAt(BlockIndex(5, 14, 9)), i);
+
+		indices.setIndexAt(0, BlockIndex(0, 0, 0));
+		indices.setIndexAt(0, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices.setIndexAt(0, BlockIndex(5, 14, 9));
+
+		check_eq(indices.indexAt(BlockIndex(0, 0, 0)), 0);
+		check_eq(indices.indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+		check_eq(indices.indexAt(BlockIndex(5, 14, 9)), 0);
+	}
+}
+
+test_case("block state indices 4 bit") {
+	BlockStateIndicesWidth4* indices = new BlockStateIndicesWidth4(); // would use a lot of the stack
+
+	check_eq(indices->indexAt(BlockIndex(0, 0, 0)), 0);
+	check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+	check_eq(indices->indexAt(BlockIndex(5, 14, 9)), 0);
+
+	// include max value
+	for (u16 i = 0; i <= BlockStateIndicesWidth4::MAX_VALUE; i++) {
+		indices->setIndexAt(i, BlockIndex(0, 0, 0));
+		indices->setIndexAt(i, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices->setIndexAt(i, BlockIndex(5, 14, 9));
+
+		check_eq(indices->indexAt(BlockIndex(0, 0, 0)), i);
+		check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), i);
+		check_eq(indices->indexAt(BlockIndex(5, 14, 9)), i);
+
+		indices->setIndexAt(0, BlockIndex(0, 0, 0));
+		indices->setIndexAt(0, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices->setIndexAt(0, BlockIndex(5, 14, 9));
+
+		check_eq(indices->indexAt(BlockIndex(0, 0, 0)), 0);
+		check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+		check_eq(indices->indexAt(BlockIndex(5, 14, 9)), 0);
+	}
+
+	delete indices;
+}
+
+test_case("block state indices 8 bit") {
+	BlockStateIndicesWidth8* indices = new BlockStateIndicesWidth8(); // would use a lot of the stack
+
+	check_eq(indices->indexAt(BlockIndex(0, 0, 0)), 0);
+	check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+	check_eq(indices->indexAt(BlockIndex(5, 14, 9)), 0);
+
+	// include max value
+	for (u16 i = 0; i <= BlockStateIndicesWidth8::MAX_VALUE; i++) {
+		indices->setIndexAt(i, BlockIndex(0, 0, 0));
+		indices->setIndexAt(i, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices->setIndexAt(i, BlockIndex(5, 14, 9));
+
+		check_eq(indices->indexAt(BlockIndex(0, 0, 0)), i);
+		check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), i);
+		check_eq(indices->indexAt(BlockIndex(5, 14, 9)), i);
+
+		indices->setIndexAt(0, BlockIndex(0, 0, 0));
+		indices->setIndexAt(0, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices->setIndexAt(0, BlockIndex(5, 14, 9));
+
+		check_eq(indices->indexAt(BlockIndex(0, 0, 0)), 0);
+		check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+		check_eq(indices->indexAt(BlockIndex(5, 14, 9)), 0);
+	}
+
+	delete indices;
+}
+
+test_case("block state indices 16 bit") {
+	BlockStateIndicesWidth16* indices = new BlockStateIndicesWidth16(); // would use a lot of the stack
+
+	check_eq(indices->indexAt(BlockIndex(0, 0, 0)), 0);
+	check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+	check_eq(indices->indexAt(BlockIndex(5, 14, 9)), 0);
+
+	auto testValue = [&](u16 i) {
+		indices->setIndexAt(i, BlockIndex(0, 0, 0));
+		indices->setIndexAt(i, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices->setIndexAt(i, BlockIndex(5, 14, 9));
+
+		check_eq(indices->indexAt(BlockIndex(0, 0, 0)), i);
+		check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), i);
+		check_eq(indices->indexAt(BlockIndex(5, 14, 9)), i);
+
+		indices->setIndexAt(0, BlockIndex(0, 0, 0));
+		indices->setIndexAt(0, BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1));
+		indices->setIndexAt(0, BlockIndex(5, 14, 9));
+
+		check_eq(indices->indexAt(BlockIndex(0, 0, 0)), 0);
+		check_eq(indices->indexAt(BlockIndex(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1)), 0);
+		check_eq(indices->indexAt(BlockIndex(5, 14, 9)), 0);
+	};
+
+	testValue(0);
+	testValue(1);
+	testValue(2);
+	testValue(5);
+	testValue(100);
+	testValue(3059);
+	testValue(10000);
+	testValue(world::CHUNK_SIZE / 2);
+	testValue(world::CHUNK_SIZE - 1);
+
+	delete indices;
+}
+
 #endif
