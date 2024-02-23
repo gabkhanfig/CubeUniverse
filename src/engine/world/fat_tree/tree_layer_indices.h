@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../core.h"
+#include "gk_types_lib/hash/hash.h"
 
 namespace world {
 
@@ -115,9 +116,30 @@ namespace world {
 			return this->values[0] == other.values[0] && this->values[1] == other.values[1] && this->values[2] == other.values[2];
 		}
 
+		constexpr usize hash() const {
+			usize h = 0;
+
+			const usize highnodes = this->values[0];
+			const usize mediumnodes = this->values[1];
+			const usize lownodes = this->values[2]; // lowest values, also chunks
+
+			h |= highnodes << 32;
+			h |= lownodes;
+			h ^= mediumnodes << 24;
+
+			return h;
+		}
+
 		u32 values[3];
 		
 
 		
 }; // struct TreeLayerIndices
 } // namespace world
+
+namespace gk {
+	template<>
+	constexpr size_t hash<world::TreeLayerIndices>(const world::TreeLayerIndices& key) {
+		return key.hash();
+	}
+}
