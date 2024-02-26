@@ -4,6 +4,8 @@
 #include <numeric>
 #include <thread>
 #include <gk_types_lib/allocator/allocator.h>
+#include "graphics/window.h"
+#include "graphics/opengl/opengl_instance.h"
 
 using gk::Result;
 using gk::ResultOk;
@@ -55,8 +57,14 @@ Result<void, Engine::InitError> Engine::init(const Engine::InitializationParams 
 void Engine::deinit()
 {
 	Engine* e = engineInstance.load(std::memory_order::acquire);
+
+	e->_window->terminate();
+	delete e->_openglInstance;
+	delete e->_window;
+
 	e->_renderThread.~JobThread();
 	e->_jobSystem.~JobSystem();
+
 	gk::globalHeapAllocator()->freeObject(e);
 	engineInstance.store(nullptr, std::memory_order::release);
 }
@@ -81,6 +89,11 @@ bool Engine::isCurrentOnRenderThread()
 	return e->_renderThread.getThreadId() == std::this_thread::get_id();
 }
 
+void Engine::run()
+{
+	renderLoop();
+}
+
 Engine* Engine::create(const InitializationParams params)
 {
 	auto res = gk::globalHeapAllocator()->mallocObject<Engine>();
@@ -94,8 +107,21 @@ Engine* Engine::create(const InitializationParams params)
 
 	new (&newEngine->_renderThread) gk::JobThread();
 	new (&newEngine->_jobSystem) gk::JobSystem(params.jobThreadCount);
+	newEngine->_window = graphics::Window::init(&newEngine->_renderThread, 640, 480, "ah"_str);
+	newEngine->_openglInstance = graphics::OpenGLInstance::init(&newEngine->_renderThread);
 
 	return newEngine;
+}
+
+void Engine::renderLoop()
+{
+	while (!this->_window->shouldClose()) {
+		(void)this->_renderThread.runJob(&graphics::OpenGLInstance::clear, this->_openglInstance);
+		auto lastFuture = this->_renderThread.runJob(&graphics::Window::swapBuffers, this->_window);
+		lastFuture.wait();
+
+		this->_window->pollEvents();
+	}
 }
 
 Engine::InitializationParams Engine::InitializationParams::defaultParams()

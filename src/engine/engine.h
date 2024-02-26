@@ -5,6 +5,11 @@
 #include <gk_types_lib/job/job_thread.h>
 #include <gk_types_lib/job/job_system.h>
 
+namespace graphics {
+	struct Window;
+	struct OpenGLInstance;
+}
+
 /// Manages the entire engine. At any given moment in time, only one engine global may exist,
 /// but `Engine.init()` can be called concurrently. This allows concurrently testing varying parts
 /// of the engine, as tests will take turns executing, while the others are atomically locked.
@@ -62,12 +67,18 @@ public:
 
 	gk::JobThread& renderThread() { return _renderThread; }
 
+	void run();
+
 private:
 
 	static Engine* create(const InitializationParams params);
+
+	void renderLoop();
 
 private:
 
 	gk::JobThread _renderThread;
 	gk::JobSystem _jobSystem;
+	graphics::Window* _window;
+	graphics::OpenGLInstance* _openglInstance;
 };
