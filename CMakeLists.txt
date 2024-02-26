@@ -15,6 +15,7 @@ project ("CubeUniverse")
 
 # Define ENGINE_SOURCES to be a list of all of the cpp files for the engine
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/*.cpp")
+set(GRAPHICS_SOURCES "dependencies/opengl/glad/glad.c")
 
 add_library(CubeUniverseEngine SHARED ${ENGINE_SOURCES} "dependencies/opengl/glad/glad.c")
 
