@@ -68,17 +68,17 @@ Engine* Engine::get()
 	return e;
 }
 
-static u32 currentThreadId() {
-	static_assert(sizeof(std::thread::id) == sizeof(u32));
-	const auto threadId = std::this_thread::get_id();
-	return *reinterpret_cast<const u32*>(&threadId);
-}
+//static u32 currentThreadId() {
+//	static_assert(sizeof(std::thread::id) == sizeof(u32));
+//	const auto threadId = std::this_thread::get_id();
+//	return *reinterpret_cast<const u32*>(&threadId);
+//}
 
 bool Engine::isCurrentOnRenderThread()
 {
 	Engine* e = Engine::get();
 	check_ne(e, nullptr);
-	return e->_renderThreadId == currentThreadId();
+	return e->_renderThread.getThreadId() == std::this_thread::get_id();
 }
 
 Engine* Engine::create(const InitializationParams params)
@@ -94,10 +94,6 @@ Engine* Engine::create(const InitializationParams params)
 
 	new (&newEngine->_renderThread) gk::JobThread();
 	new (&newEngine->_jobSystem) gk::JobSystem(params.jobThreadCount);
-
-	const u32 threadId = newEngine->_renderThread.runJob(currentThreadId).wait();
-	check_ne(threadId, 0);
-	newEngine->_renderThreadId = threadId;
 
 	return newEngine;
 }

@@ -60,6 +60,8 @@ public:
 	/// that the OpenGL context was created on, which must be the render thread.
 	static bool isCurrentOnRenderThread();
 
+	gk::JobThread& renderThread() { return _renderThread; }
+
 private:
 
 	static Engine* create(const InitializationParams params);
@@ -68,5 +70,4 @@ private:
 
 	gk::JobThread _renderThread;
 	gk::JobSystem _jobSystem;
-	gk::u32 _renderThreadId;
 };
