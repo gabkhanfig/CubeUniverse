@@ -4,10 +4,8 @@ using namespace world;
 
 #ifdef WITH_TESTS
 
-comptime_test_case(tree_layer_indices_size_alignment, {
-	check_eq(sizeof(TreeLayerIndices), 12);
-	check_eq(alignof(TreeLayerIndices), 4);
-});
+static_assert(sizeof(TreeLayerIndices) == 12);
+static_assert(alignof(TreeLayerIndices) == 4);
 
 comptime_test_case(tree_layer_indices_zero_initialized, {
 	const TreeLayerIndices t;
