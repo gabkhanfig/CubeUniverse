@@ -41,56 +41,39 @@ world::FatTreeNode::Type world::FatTreeNode::nodeType() const
 	return enumTag;
 }
 
-//TreeNodeColor world::FatTreeNode::lodColor() const
-//{
-//	const usize maskedLod = this->value & LOD_COLOR_MASK;
-//	const u16 shift = static_cast<u16>(maskedLod >> LOD_SHIFT_AMOUNT);
-//	return TreeNodeColor{ .mask = shift };
-//}
-//
-//void world::FatTreeNode::setLodColor(const TreeNodeColor inColor)
-//{
-//	const usize maskedTag = this->value & TYPE_MASK;
-//	const usize maskedPtr = this->value & PTR_MASK;
-//
-//	const usize lod = inColor.mask;
-//
-//	this->value = maskedTag | maskedPtr | (lod << LOD_SHIFT_AMOUNT);
-//}
-
 world::FatTreeLayer& world::FatTreeNode::childLayer()
 {
 	check_eq(this->nodeType(), Type::childLayer);
 	usize ptr = this->value & PTR_MASK;
-	return reinterpret_cast<FatTreeLayer&>(ptr);
+	return *reinterpret_cast<FatTreeLayer*>(ptr);
 }
 
 const world::FatTreeLayer& world::FatTreeNode::childLayer() const
 {
 	check_eq(this->nodeType(), Type::childLayer);
 	usize ptr = this->value & PTR_MASK;
-	return reinterpret_cast<const FatTreeLayer&>(ptr);
+	return *reinterpret_cast<const FatTreeLayer*>(ptr);
 }
 
-world::Chunk* world::FatTreeNode::chunk() const
+world::Chunk& world::FatTreeNode::chunk() const
 {
 	check_eq(this->nodeType(), Type::chunk);
 	usize ptr = this->value & PTR_MASK;
-	return reinterpret_cast<Chunk*>(ptr);
+	return *reinterpret_cast<Chunk*>(ptr);
 }
 
 world::FatTreeNoodle& world::FatTreeNode::noodleLayer()
 {
 	check_eq(this->nodeType(), Type::noodleLayer);
 	usize ptr = this->value & PTR_MASK;
-	return reinterpret_cast<FatTreeNoodle&>(ptr);
+	return *reinterpret_cast<FatTreeNoodle*>(ptr);
 }
 
 const world::FatTreeNoodle& world::FatTreeNode::noodleLayer() const
 {
 	check_eq(this->nodeType(), Type::noodleLayer);
 	const usize ptr = this->value & PTR_MASK;
-	return reinterpret_cast<const FatTreeNoodle&>(ptr);
+	return *reinterpret_cast<const FatTreeNoodle*>(ptr);
 }
 
 world::FatTree::Inner::~Inner()
@@ -98,14 +81,14 @@ world::FatTree::Inner::~Inner()
 	// something idk
 }
 
-gk::Option<Chunk*> world::FatTree::Inner::chunkAt(const TreeLayerIndices position) const
+gk::Option<world::Chunk&> world::FatTree::Inner::chunkAt(const TreeLayerIndices position) const
 {
 	auto c = this->chunks.find(position);
 	if (c.none()) {
-		return gk::Option<Chunk*>();
+		return gk::Option<Chunk&>();
 	}
 	Chunk* chunk = *c.some();
-	return gk::Option<Chunk*>(chunk);
+	return gk::Option<Chunk&>(*chunk);
 }
 
 
@@ -116,3 +99,23 @@ using namespace world;
 //static_assert(sizeof(FatTreeNoodle::NoodleJump) == 16);
 
 #endif
+
+world::FatTree::ChunkModifyGuard world::FatTree::lockChunkModify() const
+{
+	return this->inner.read();
+}
+
+gk::Option<world::FatTree::ChunkModifyGuard> world::FatTree::tryLockChunkModify() const
+{
+	return this->inner.tryRead();
+}
+
+world::FatTree::TreeModifyGuard world::FatTree::lockTreeModify()
+{
+	return this->inner.write();
+}
+
+gk::Option<world::FatTree::TreeModifyGuard> world::FatTree::tryLockTreeModify()
+{
+	return this->inner.tryWrite();
+}

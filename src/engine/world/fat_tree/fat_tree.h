@@ -16,11 +16,9 @@ namespace world {
 	struct FatTreeNode {
 	private:
 
-		static constexpr usize LOD_COLOR_MASK = 0x0FFF000000000000;
-		static constexpr usize LOD_SHIFT_AMOUNT = 48;
 		static constexpr usize PTR_MASK = 0x0000FFFFFFFFFFFF;
-		static constexpr usize TYPE_MASK = 0xF000000000000000;
-		static constexpr usize TYPE_SHIFT = 60;
+		static constexpr usize TYPE_MASK = 0xFFFF000000000000;
+		static constexpr usize TYPE_SHIFT = 48;
 
 	public: 
 
@@ -38,7 +36,7 @@ namespace world {
 		Type nodeType() const;
 
 		/// Asserts that `nodeType() == Type::childLayer`.
-		struct FatTreeLayer& childLayer();
+		FatTreeLayer& childLayer();
 
 		/// Asserts that `nodeType() == Type::childLayer`.
 		const FatTreeLayer& childLayer() const;
@@ -46,8 +44,7 @@ namespace world {
 		/// This is const qualified because the chunk itself has specific 
 		/// thread safe access to it's data.
 		/// Asserts that `nodeType() == Type::chunk`.
-		/// @return Non-null pointer to the chunk's data.
-		Chunk* chunk() const;
+		Chunk& chunk() const;
 
 		/// Asserts that `nodeType() == Type::noodleLayer`.
 		FatTreeNoodle& noodleLayer();
@@ -89,7 +86,7 @@ namespace world {
 
 			/// This is const qualified because the chunk itself has specific 
 			/// thread safe access to it's data.
-			gk::Option<Chunk*> chunkAt(const TreeLayerIndices position) const;
+			gk::Option<Chunk&> chunkAt(const TreeLayerIndices position) const;
 
 		private:
 
