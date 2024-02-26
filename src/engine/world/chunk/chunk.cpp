@@ -5,7 +5,7 @@
 world::Chunk::Inner::Inner(FatTree& inTree, TreeLayerIndices inPos)
 	: _tree(inTree), _treePos(inPos)
 {
-	auto allocator = this->_tree.getAllocatorRef();
+	auto allocator = gk::globalHeapAllocatorRef();//this->_tree.getAllocatorRef();
 
 	auto res = allocator.mallocBuffer<BlockState>(DEFAULT_BLOCK_STATE_CAPACITY);
 	if (res.isError()) {
@@ -19,7 +19,7 @@ world::Chunk::Inner::Inner(FatTree& inTree, TreeLayerIndices inPos)
 
 world::Chunk::Inner::~Inner()
 {
-	auto allocator = this->_tree.getAllocatorRef();
+	auto allocator = gk::globalHeapAllocatorRef();//this->_tree.getAllocatorRef();
 
 	// TODO also call destructors for block states
 	allocator.freeBuffer(this->_blockStatesData, this->_blockStatesCapacity);
