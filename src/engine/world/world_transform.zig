@@ -1,7 +1,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
 const expect = std.testing.expect;
-const tree_layer_indices = @import("n_tree/tree_layer_indices.zig");
+const tree_layer_indices = @import("fat_tree/tree_layer_indices.zig");
 const TreeLayerIndices = tree_layer_indices.TreeLayerIndices;
 const TREE_LAYERS = tree_layer_indices.TREE_LAYERS;
 const TREE_NODE_LENGTH = tree_layer_indices.TREE_NODE_LENGTH;
@@ -105,7 +105,7 @@ pub const BlockPosition = extern struct {
     z: i64,
 
     /// Convert this `WorldPosition` into it's corresponding `BlockPosition`,
-    /// without specifying where in the NTree structure the block is (doesn't specify which chunk).
+    /// without specifying where in the FatTree structure the block is (doesn't specify which chunk).
     /// Asserts that x y z components are within the inclusive range of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
     pub fn asBlockIndex(self: Self) BlockIndex {
         assert(self.x <= WORLD_MAX_BLOCK_POS);
@@ -122,7 +122,7 @@ pub const BlockPosition = extern struct {
         return BlockIndex.init(@intCast(relativeX), @intCast(relativeY), @intCast(relativeZ));
     }
 
-    /// Convert this `WorldPosition` into the indices of each layer of the NTree.
+    /// Convert this `WorldPosition` into the indices of each layer of the FatTree.
     /// Functionally the same as the position of a chunk, without the `BlockIndex`.
     /// Asserts that x y z components are within the inclusive range of `WORLD_MAX_BLOCK_POS` and `WORLD_MIN_BLOCK_POS`.
     pub fn asTreeIndices(self: Self) TreeLayerIndices {
@@ -189,7 +189,7 @@ pub const BlockPosition = extern struct {
     }
 };
 
-/// Position of anything within the `NTree` structure.
+/// Position of anything within the `FatTree` structure.
 /// Internally uses `TreeLayerIndices` to specify which chunk it is in,
 /// and then a 32 bit 3 component float `vec3` for where within the chunk.
 /// This structure can be used on the GPU.

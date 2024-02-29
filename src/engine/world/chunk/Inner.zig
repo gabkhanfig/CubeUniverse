@@ -22,7 +22,7 @@ const RwLock = std.Thread.RwLock;
 const ArrayList = std.ArrayList;
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
 const TreeLayerIndices = @import("../n_tree/tree_layer_indices.zig").TreeLayerIndices;
-const NTree = @import("../n_tree/NTree.zig");
+const FatTree = @import("../fat_tree/FatTree.zig");
 const Allocator = std.mem.Allocator;
 const assert = std.debug.assert;
 const expect = std.testing.expect;
@@ -45,15 +45,15 @@ _lock: RwLock = .{}, // TODO maybe srwlock?
 /// DO NOT MODIFY, but can access directly.
 /// Allows immediately going to the head of the tree that owns this chunk,
 /// checking the state, and getting the allocator.
-tree: *NTree,
+tree: *FatTree,
 /// DO NOT MODIFY, but can access directly.
-/// Position of this chunk within the NTree.
+/// Position of this chunk within the FatTree.
 /// Should not be ever modified.
 treePos: TreeLayerIndices,
 /// Do not access directly. Will always be a valid pointer of a length of 1 or more.
 /// The first entry is the state of an air block, meaning that initializing _blockStateIds to all 0's
 /// means the chunk is full of air.
-/// NOTE: A chunk that is only air will be eventually cleaned up and replaced with an empty NTree node.
+/// NOTE: A chunk that is only air will be eventually cleaned up and replaced with an empty FatTree node.
 _blockStatesData: [*]BlockState,
 /// Do not access directly. Will always be non-zero
 _blockStatesLen: u16 = 1,
@@ -71,7 +71,7 @@ _blockStateIndices: BlockStateIndices,
 _breakingProgress: ?*ArrayListUnmanaged(BlockBreakingProgress) = null,
 
 ///
-pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
+pub fn init(tree: *FatTree, treePos: TreeLayerIndices) Allocator.Error!*Self {
     const newSelf = try tree.allocator.create(Self);
 
     const blockStatesSlice = try tree.allocator.alloc(BlockState, DEFAULT_BLOCK_STATE_CAPACITY);
@@ -135,7 +135,7 @@ test "Size and Align" {
 }
 
 test "Init deinit" {
-    const tree = try NTree.init(std.testing.allocator);
+    const tree = try FatTree.init(std.testing.allocator);
     defer tree.deinit();
 
     const inner = try Self.init(tree, TreeLayerIndices{});

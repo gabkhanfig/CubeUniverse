@@ -1,16 +1,16 @@
-//! Used to navigate the NTree structure to find a chunk, or other another node representation.
+//! Used to navigate the FatTree structure to find a chunk, or other another node representation.
 //! Fundamentally, it's just an array of `TREE_LAYERS` indices.
 
 const std = @import("std");
 const assert = std.debug.assert;
 const expect = std.testing.expect;
 
-/// How many nodes long / wide / tall each layer of the NTree is.
+/// How many nodes long / wide / tall each layer of the FatTree is.
 pub const TREE_NODE_LENGTH = 4;
 /// # 64
-/// Total amount of nodes per layer within the NTree.
+/// Total amount of nodes per layer within the FatTree.
 pub const TREE_NODES_PER_LAYER: comptime_int = TREE_NODE_LENGTH * TREE_NODE_LENGTH * TREE_NODE_LENGTH;
-/// Total number of layers within the NTree structure.
+/// Total number of layers within the FatTree structure.
 pub const TREE_LAYERS = 15;
 /// # 1073741824
 /// The amount of nodes required on a single dimension to fit the entire tree structure.

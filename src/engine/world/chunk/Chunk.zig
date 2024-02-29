@@ -6,8 +6,8 @@ const std = @import("std");
 const world_transform = @import("../world_transform.zig");
 const RwLock = std.Thread.RwLock;
 const ArrayList = std.ArrayList;
-const TreeLayerIndices = @import("../n_tree/tree_layer_indices.zig").TreeLayerIndices;
-const NTree = @import("../n_tree/NTree.zig");
+const TreeLayerIndices = @import("../fat_tree/tree_layer_indices.zig").TreeLayerIndices;
+const FatTree = @import("../fat_tree/FatTree.zig");
 const Allocator = std.mem.Allocator;
 const assert = std.debug.assert;
 const expect = std.testing.expect;
@@ -25,16 +25,16 @@ inner: *anyopaque,
 
 /// Create a new Chunk instance using `allocator`.
 /// If allocation fails, returns an error.
-pub fn init(tree: *NTree, treePos: TreeLayerIndices) Allocator.Error!Self {
+pub fn init(tree: *FatTree, treePos: TreeLayerIndices) Allocator.Error!Self {
     const newInner = try Inner.init(tree, treePos);
     return Self{ .inner = @ptrCast(newInner) };
 }
 
 /// # Thread safety
 ///
-/// Only call `deinit()` through the owning `NTree`'s `TreeModify` access.
+/// Only call `deinit()` through the owning `FatTree`'s `TreeModify` access.
 /// Asserts that no other thread has locked the chunk. If another thread has,
-/// that would mean the `NTree` is not exclusively locked.
+/// that would mean the `FatTree` is not exclusively locked.
 ///
 /// The programmer must ensure no other thread is even trying to access
 /// the `Chunk` data. Naturally, any thread awaiting invalid memory
@@ -127,7 +127,7 @@ fn getInnerPtrMut(self: *Self) *Inner {
 // Tests
 
 test "init deinit chunk inner" {
-    const tree = try NTree.init(std.testing.allocator);
+    const tree = try FatTree.init(std.testing.allocator);
     defer tree.deinit();
 
     var chunk = try Self.init(tree, TreeLayerIndices{});

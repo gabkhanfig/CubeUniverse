@@ -1,4 +1,4 @@
-//! Spatial hashing for the active chunks owned by the `NTree`.
+//! Spatial hashing for the active chunks owned by the `FatTree`.
 //! Allows extremely fast fetching of chunks, without having
 //! to traverse the entire tree structure.
 
@@ -6,7 +6,7 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const Chunk = @import("../chunk/chunk.zig");
 const TreeLayerIndices = @import("tree_layer_indices.zig").TreeLayerIndices;
-const NTree = @import("NTree.zig");
+const FatTree = @import("FatTree.zig");
 const assert = std.debug.assert;
 const expect = std.testing.expect;
 
@@ -51,7 +51,7 @@ pub fn find(self: Self, key: TreeLayerIndices) ?Chunk {
     return self.groups[groupIndex].pairs[found.?].value;
 }
 
-/// Trying to add a duplicate entry is strictly not allowed, because it is not allowed by the NTree.
+/// Trying to add a duplicate entry is strictly not allowed, because it is not allowed by the FatTree.
 /// Asserts the entry doesn't already exist.
 pub fn insert(self: *Self, key: TreeLayerIndices, value: Chunk) Allocator.Error!void {
     if (self.shouldReallocate(self.chunkCount + 1)) {
@@ -241,7 +241,7 @@ const Group = struct {
             return;
         }
 
-        @panic("Unreachable. Insert a mapped NTree chunk failed.");
+        @panic("Unreachable. Insert a mapped FatTree chunk failed.");
     }
 
     fn erase(self: *Group, key: TreeLayerIndices, hashCode: usize, allocator: *Allocator) bool {
@@ -346,7 +346,7 @@ test "Init deinit" {
 test "Insert chunk" {
     var allocator = std.testing.allocator;
 
-    const tree = try NTree.init(allocator);
+    const tree = try FatTree.init(allocator);
     defer tree.deinit();
 
     var map = Self.init(&allocator);

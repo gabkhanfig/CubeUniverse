@@ -1,20 +1,20 @@
 //! Structure representing an entire world state.
 //! It's similar to an octree, but instead of being 2x2x2, it's
 //! `TREE_NODE_LENGTH` * `TREE_NODE_LENGTH` * `TREE_NODE_LENGTH`.
-//! NTree instance's will always have a consistent memory address,
+//! FatTree instance's will always have a consistent memory address,
 //! so storing a reference to it's allocator is safe, as long as the
-//! reference's lifetime does not exceed the lifetime of the NTree.
+//! reference's lifetime does not exceed the lifetime of the FatTree.
 //!
 //! # Thread-safe access
 //!
-//! The `NTree`'s data can be accessed in two distinct ways.
+//! The `FatTree`'s data can be accessed in two distinct ways.
 //! - Chunk modification only
 //! - Full tree modification
 //!
 //! With chunk-only modification, chunks/layers/nodes cannot be added,
 //! removed, or anything else from the tree. The only thing permitted
 //! are read/write operations on the data chunks own. The chunks naturally
-//! have to be appropriately locked. This `NTree` locking mode allows multiple
+//! have to be appropriately locked. This `FatTree` locking mode allows multiple
 //! threads to have shared access to the chunks, and reading the state of the tree.
 //!
 //! With full tree modification, the entire tree can be modified freely through
@@ -39,11 +39,11 @@ pub const TreeModify = @import("TreeModify.zig");
 const Self = @This();
 
 /// Has a consistent memory address, so as long as the lifetime of the reference does not live
-/// past the lifetime of the NTree, storing a reference to this allocator is safe.
+/// past the lifetime of the FatTree, storing a reference to this allocator is safe.
 allocator: Allocator,
 _inner: Inner,
 
-/// Allocates a new NTree object, initializing it, and taking ownership of `allocator`.
+/// Allocates a new FatTree object, initializing it, and taking ownership of `allocator`.
 pub fn init(allocator: Allocator) Allocator.Error!*Self {
     const newSelf = try allocator.create(Self);
     newSelf.allocator = allocator;
@@ -57,7 +57,7 @@ pub fn init(allocator: Allocator) Allocator.Error!*Self {
 /// # Thread safety
 ///
 /// The programmer must ensure no other thread is even trying to access
-/// the `NTree` data. Naturally, any thread awaiting invalid memory
+/// the `FatTree` data. Naturally, any thread awaiting invalid memory
 /// is completely unsafe.
 pub fn deinit(self: *Self) void {
     self._inner.deinit();
@@ -65,8 +65,8 @@ pub fn deinit(self: *Self) void {
     allocator.destroy(self);
 }
 
-/// Acquires a shared lock to the `NTree`'s data, returning a `ChunkModify`.
-/// Through `ChunkModify`, thread safe access to the chunks within this NTree is guaranteed.
+/// Acquires a shared lock to the `FatTree`'s data, returning a `ChunkModify`.
+/// Through `ChunkModify`, thread safe access to the chunks within this FatTree is guaranteed.
 /// Naturally, the chunks themselves still need to be locked appropriately.
 pub fn lockChunkModify(self: *Self) *const Inner {
     self._inner._rwLock.lockShared();
@@ -74,8 +74,8 @@ pub fn lockChunkModify(self: *Self) *const Inner {
 }
 
 /// Tries to acquire a shared lock to the Tree's data, returning a `ChunkModify`,
-/// or an error if the `NTree` is already exclusively locked through `TreeModify`.
-/// Through `ChunkModify`, thread safe access to the chunks within this NTree is guaranteed.
+/// or an error if the `FatTree` is already exclusively locked through `TreeModify`.
+/// Through `ChunkModify`, thread safe access to the chunks within this FatTree is guaranteed.
 /// Naturally, the chunks themselves still need to be locked appropriately.
 pub fn tryLockChunkModify(self: *Self) ?*const Inner {
     if (self._inner._rwLock.tryLockShared()) {
@@ -85,20 +85,20 @@ pub fn tryLockChunkModify(self: *Self) ?*const Inner {
     }
 }
 
-/// Unlocks the shared lock to the `NTree`'s data.
+/// Unlocks the shared lock to the `FatTree`'s data.
 pub fn unlockChunkModify(self: *Self) void {
     self._inner._rwLock.unlockShared();
 }
 
-/// Acquires an exclusive lock to the `NTree`'s data, returning a `TreeModify`.
+/// Acquires an exclusive lock to the `FatTree`'s data, returning a `TreeModify`.
 /// Through `TreeModify`, thread safe access to mutate the entire tree's data is guaranteed.
 pub fn lockTreeModify(self: *Self) *Inner {
     self._inner._rwLock.lock();
     return &self._inner;
 }
 
-/// Tries to acquire an exclusive lock to the `NTree`'s data, returning a `TreeModify`,
-/// or an error if the `NTree` is already shared locked through `ChunkModify`.
+/// Tries to acquire an exclusive lock to the `FatTree`'s data, returning a `TreeModify`,
+/// or an error if the `FatTree` is already shared locked through `ChunkModify`.
 /// Through `TreeModify`, thread safe access to mutate the entire tree's data is guaranteed.
 pub fn tryLockTreeModify(self: *Self) ?*Inner {
     if (self._inner._rwLock.tryLock()) {
@@ -108,7 +108,7 @@ pub fn tryLockTreeModify(self: *Self) ?*Inner {
     }
 }
 
-/// Unlocks the exclusive lock to the `NTree`'s data.
+/// Unlocks the exclusive lock to the `FatTree`'s data.
 pub fn unlockTreeModify(self: *Self) void {
     self._inner._rwLock.unlock();
 }
@@ -130,7 +130,7 @@ pub const Inner = struct {
 
     fn deinit(self: *Inner) void {
         if (!self._rwLock.tryLock()) {
-            @panic("Cannot deinit NTree while other threads have RwLock access to it's inner data");
+            @panic("Cannot deinit FatTree while other threads have RwLock access to it's inner data");
         }
 
         // Free all owned stuff.
@@ -296,7 +296,7 @@ test "Layer align" {
     try expect(@alignOf(Layer) == 64);
 }
 
-test "init deinit NTree" {
+test "init deinit FatTree" {
     var tree = try Self.init(std.testing.allocator);
     tree.deinit();
 }
