@@ -1,0 +1,354 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E4BD7AD6-3D37-312F-960E-15E458B34E94}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.22000.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>Luau.VM</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Luau.VM.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Luau.VM</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Luau.VM.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Luau.VM</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Luau.VM.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Luau.VM</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Luau.VM.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Luau.VM</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <TreatSpecificWarningsAsErrors>4018;4388</TreatSpecificWarningsAsErrors>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <TreatSpecificWarningsAsErrors>4018;4388</TreatSpecificWarningsAsErrors>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <TreatSpecificWarningsAsErrors>4018;4388</TreatSpecificWarningsAsErrors>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <TreatSpecificWarningsAsErrors>4018;4388</TreatSpecificWarningsAsErrors>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau -BC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake --check-stamp-file C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\WindowsPaths.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Sources.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeCCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeCXXCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeRCCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau -BC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake --check-stamp-file C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\WindowsPaths.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Sources.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeCCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeCXXCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeRCCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau -BC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake --check-stamp-file C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\WindowsPaths.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Sources.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeCCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeCXXCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeRCCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau -BC:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake --check-stamp-file C:/Users/Admin/Documents/Code/CubeUniverse/CubeUniverse/dependencies/luau/cmake/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\WindowsPaths.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\Sources.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeCCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeCXXCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeRCCompiler.cmake;C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\3.25.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include\lua.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include\luaconf.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\include\lualib.h" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lapi.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\laux.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lbaselib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lbitlib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lbuffer.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lbuflib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lbuiltins.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lcorolib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ldblib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ldebug.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ldo.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lfunc.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lgc.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lgcdebug.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\linit.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lmathlib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lmem.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lnumprint.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lobject.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\loslib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lperf.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lstate.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lstring.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lstrlib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ltable.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ltablib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ltm.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ludata.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lutf8lib.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lvmexecute.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalOptions) /d2ssa-pre-</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalOptions) /d2ssa-pre-</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalOptions) /d2ssa-pre-</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalOptions) /d2ssa-pre-</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lvmload.cpp" />
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lvmutils.cpp" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lapi.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lbuffer.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lbuiltins.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lbytecode.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lcommon.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ldebug.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ldo.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lfunc.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lgc.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lmem.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lnumutils.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lobject.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lstate.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lstring.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ltable.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ltm.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\ludata.h" />
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\VM\src\lvm.h" />
+    <Natvis Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\tools\natvis\VM.natvis">
+    </Natvis>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\ZERO_CHECK.vcxproj">
+      <Project>{CA510B97-2A6F-375A-9AE3-34F5C176B6EA}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\cmake\Luau.Common.vcxproj">
+      <Project>{A4707838-692A-3506-B563-B21136934EBF}</Project>
+      <Name>Luau.Common</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

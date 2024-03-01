@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\CLI\Reduce.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\CLI\FileUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\CLI\FileUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Admin\Documents\Code\CubeUniverse\CubeUniverse\dependencies\luau\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{DD8DC200-C0A5-386F-9B93-280F2B34B9D0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{9098CAF5-B954-391C-BCFC-7BA05ECF815B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
