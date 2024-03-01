@@ -3,5 +3,3 @@ thirdparty/sdl/build
 *.spv
 .vs
 build
-zig-cache
-zig-out
