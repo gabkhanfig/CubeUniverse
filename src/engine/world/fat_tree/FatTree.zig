@@ -33,9 +33,6 @@ const AtomicOrder = std.builtin.AtomicOrder;
 const TreeNodeColor = @import("../../types/color.zig").TreeNodeColor;
 const LoadedChunksHashMap = @import("LoadedChunksHashMap.zig");
 
-pub const ChunkModify = @import("ChunkModify.zig");
-pub const TreeModify = @import("TreeModify.zig");
-
 const Self = @This();
 
 /// Has a consistent memory address, so as long as the lifetime of the reference does not live
