@@ -13,6 +13,7 @@ comptime {
     _ = @import("engine/math/detail/vector2.zig");
     _ = @import("engine/math/detail/vector3.zig");
     _ = @import("engine/math/detail/vector4.zig");
+    _ = @import("engine/types/string.zig");
 }
 
 // TODO system tests
