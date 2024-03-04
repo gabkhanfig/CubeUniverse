@@ -78,6 +78,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    linkAndIncludeCLibs(target, b, engine_unit_tests);
+    linkAndIncludeCLibs(target, b, engine_system_tests);
+
     // NOTE Unit tests are unable to link to the DLL. Likely a bug?
     //exe_unit_tests.linkLibrary(engine_shared_lib);
 
@@ -101,6 +104,9 @@ fn linkAndIncludeCLibs(target: std.Build.ResolvedTarget, b: *std.Build, artifact
 
     artifact.linkLibC();
     artifact.linkLibCpp();
+
+    artifact.addCSourceFile(.{ .file = LazyPath.relative("src/engine/types/string_simd.cpp"), .flags = &flags });
+    artifact.addIncludePath(LazyPath.relative("src"));
 
     // OpenGL
     artifact.linkSystemLibrary("opengl32");

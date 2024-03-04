@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "windows.h": "c",
+        "charconv": "c",
+        "cstdio": "c",
+        "xlocnum": "c",
+        "cstdint": "cpp"
+    }
+}
