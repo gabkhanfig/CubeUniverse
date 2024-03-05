@@ -4,6 +4,7 @@
         "charconv": "c",
         "cstdio": "c",
         "xlocnum": "c",
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "atomic": "cpp"
     }
 }
