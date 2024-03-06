@@ -3,10 +3,10 @@ const c = @import("../../clibs.zig");
 const Engine = @import("../../Engine.zig");
 const assert = std.debug.assert;
 
-const Self = @This();
-
 /// Will only ever be accessed by 1 thread, the Engine's OpenGL render thread.
 var currentBoundIBO: u32 = 0;
+
+const Self = @This();
 
 id: u32,
 indexCount: u32 = 0,
