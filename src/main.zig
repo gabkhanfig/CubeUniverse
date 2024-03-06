@@ -1,6 +1,8 @@
 const std = @import("std");
 const c = @import("engine/clibs.zig");
 const RasterShader = @import("engine/graphics/opengl/shader.zig").RasterShader;
+const Vbo = @import("engine/graphics/opengl/VertexBufferObject.zig");
+const Ibo = @import("engine/graphics/opengl/IndexBufferObject.zig");
 
 const vertSource = @embedFile("assets/basic.vert");
 const fragSource = @embedFile("assets/basic.frag");
@@ -28,10 +30,26 @@ pub fn main() !void {
         0.5, -0.5, //0.0,
     };
 
-    var buffer: u32 = undefined;
-    c.glGenBuffers(1, &buffer);
-    c.glBindBuffer(c.GL_ARRAY_BUFFER, buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 6 * @sizeOf(f32), @ptrCast(&positions), c.GL_STATIC_DRAW);
+    // const vertices: [12]f32 = .{
+    //     // Pos         UV
+    //     -1.0, -1.0, 0.0, 0.0,
+    //     -1.0, 1.0,  0.0, 1.0,
+    //     1.0,  1.0,  1.0, 1.0,
+    //     1.0,  -1.0, 1.0, 0.0,
+    // };
+
+    // const indices: [6]u32 = .{
+    //     0, 2, 1,
+    //     0, 3, 2,
+    // };
+
+    var vbo = Vbo.init();
+    vbo.bufferData(f32, &positions);
+    vbo.bind();
+
+    var ibo = Ibo.init();
+    ibo.bufferData(&.{ 0, 1, 2 });
+    ibo.bind();
 
     c.glEnableVertexAttribArray(0);
     c.glVertexAttribPointer(0, 2, c.GL_FLOAT, c.GL_FALSE, 2 * @sizeOf(f32), @ptrFromInt(0));
@@ -46,7 +64,8 @@ pub fn main() !void {
 
         c.glClear(c.GL_COLOR_BUFFER_BIT);
 
-        c.glDrawArrays(c.GL_TRIANGLES, 0, 6);
+        //c.glDrawArrays(c.GL_TRIANGLES, 0, 6);
+        c.glDrawElements(c.GL_TRIANGLES, 3, c.GL_UNSIGNED_INT, null);
 
         c.glfwSwapBuffers(createWindow);
     }
