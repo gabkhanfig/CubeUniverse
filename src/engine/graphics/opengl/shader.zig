@@ -64,6 +64,80 @@ pub const RasterShader = struct {
     }
 };
 
+pub const ComputeShader = struct {
+    const Self = @This();
+
+    /// The OpenGL program id. Equivalent to `glCreateProgram()`.
+    id: u32,
+    uniforms: StringHashMap(u32),
+
+    pub fn init(computeSource: []const u8) CompileError!Self {
+        const program = c.glCreateProgram();
+
+        const cs = compileShader(computeSource, c.GL_COMPUTE_SHADER) catch |err| {
+            c.glDeleteProgram(program);
+            return err;
+        };
+
+        c.glAttachShader(program, cs);
+        c.glLinkProgram(program);
+        c.glValidateProgram(program);
+
+        c.glDeleteShader(cs);
+
+        return Self{
+            .id = program,
+            .uniforms = StringHashMap(u32).init(std.heap.c_allocator),
+        };
+    }
+
+    pub fn deinit(self: *Self) void {
+        c.glDeleteProgram(self.id);
+        self.uniforms.deinit();
+    }
+
+    pub fn bind(self: Self) void {
+        //assert(Engine.isCurrentOnRenderThread());
+        bindShader(self.id);
+    }
+
+    pub fn unbind() void {
+        unbindShader();
+    }
+
+    pub fn setUniform(self: *Self, uniformName: [:0]const u8, comptime T: type, value: T) void {
+        setShaderUniform(self.id, T, uniformName, &self.map, value);
+    }
+
+    pub fn dispatch(self: Self, numGroupsX: u32, numGroupsY: u32, numGroupsZ: u32) void {
+        self.bind();
+        c.glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
+        c.glMemoryBarrier(c.GL_ALL_BARRIER_BITS);
+    }
+
+    pub fn maxWorkGroupsPerComputeShader() Vector3(i32) {
+        var workGroupCount: [3]i32 = undefined;
+        c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &workGroupCount[0]);
+        c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &workGroupCount[1]);
+        c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &workGroupCount[2]);
+        return Vector3(i32){ .x = workGroupCount[0], .y = workGroupCount[1], .z = workGroupCount[2] };
+    }
+
+    pub fn maxWorkGroupSizes() Vector3(i32) {
+        var workGroupSizes: [3]i32 = undefined;
+        c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &workGroupSizes[0]);
+        c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &workGroupSizes[1]);
+        c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &workGroupSizes[2]);
+        return Vector3(i32){ .x = workGroupSizes[0], .y = workGroupSizes[1], .z = workGroupSizes[2] };
+    }
+
+    pub fn maxInvocationsPerWorkGroup() i32 {
+        var invocations: i32 = undefined;
+        c.glGetIntegerv(c.GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &invocations);
+        return invocations;
+    }
+};
+
 fn compileShader(source: []const u8, comptime shaderType: c_uint) CompileError!u32 {
     const id = c.glCreateShader(shaderType);
 
