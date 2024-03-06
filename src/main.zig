@@ -19,7 +19,7 @@ pub fn main() !void {
         @panic("Failed to initialize glfw!");
     }
 
-    const createWindow = c.glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello World", null, null);
+    const createWindow = c.glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Muehehehe", null, null);
     if (createWindow == null) {
         c.glfwTerminate();
         @panic("Failed to create glfw window");
@@ -90,15 +90,25 @@ pub fn main() !void {
     // c.glEnableVertexAttribArray(1);
     // c.glVertexAttribPointer(1, 2, c.GL_FLOAT, c.GL_FALSE, 2 * @sizeOf(f32), @ptrFromInt(2 * @sizeOf(f32)));
 
-    var shader = RasterShader.init(vertSource, fragSource) catch unreachable;
-    defer shader.deinit();
+    var raster = RasterShader.init(vertSource, fragSource) catch unreachable;
+    defer raster.deinit();
 
-    shader.bind();
+    var compute = ComputeShader.init(compSource) catch unreachable;
+    defer compute.deinit();
+
+    //shader.bind();
 
     while (c.glfwWindowShouldClose(createWindow) != c.GLFW_TRUE) {
         c.glfwPollEvents();
 
         c.glClear(c.GL_COLOR_BUFFER_BIT);
+
+        compute.bind();
+        compute.dispatch(SCREEN_WIDTH / 16, SCREEN_HEIGHT / 16, 1);
+
+        raster.bind();
+        c.glBindTextureUnit(0, screenTex);
+        c.glUniform1i(c.glGetUniformLocation(raster.id, "screen"), 0);
 
         //c.glDrawArrays(c.GL_TRIANGLES, 0, 6);
         c.glBindVertexArray(vao);
