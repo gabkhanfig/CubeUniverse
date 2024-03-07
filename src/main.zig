@@ -4,6 +4,7 @@ const RasterShader = @import("engine/graphics/opengl/shader.zig").RasterShader;
 const Vbo = @import("engine/graphics/opengl/VertexBufferObject.zig");
 const Ibo = @import("engine/graphics/opengl/IndexBufferObject.zig");
 const ComputeShader = @import("engine/graphics/opengl/shader.zig").ComputeShader;
+const Vao = @import("engine/graphics/opengl/VertexArrayObject.zig");
 
 // const vertSource = @embedFile("assets/basic.vert");
 // const fragSource = @embedFile("assets/basic.frag");
@@ -54,8 +55,8 @@ pub fn main() !void {
         0, 3, 2,
     };
 
-    var vao: u32 = undefined;
-    c.glCreateVertexArrays(1, &vao);
+    // var vao: u32 = undefined;
+    // c.glCreateVertexArrays(1, &vao);
 
     var vbo = Vbo.init();
     vbo.bufferData(f32, &vertices);
@@ -74,21 +75,16 @@ pub fn main() !void {
     c.glTextureStorage2D(screenTex, 1, c.GL_RGBA32F, SCREEN_WIDTH, SCREEN_HEIGHT);
     c.glBindImageTexture(0, screenTex, 0, c.GL_FALSE, 0, c.GL_WRITE_ONLY, c.GL_RGBA32F);
 
-    c.glEnableVertexArrayAttrib(vao, 0);
-    c.glVertexArrayAttribBinding(vao, 0, 0);
-    c.glVertexArrayAttribFormat(vao, 0, 3, c.GL_FLOAT, c.GL_FALSE, 0);
+    var vao = Vao.init();
+    var layout = Vao.Layout.init(std.heap.page_allocator);
+    defer layout.deinit();
 
-    c.glEnableVertexArrayAttrib(vao, 1);
-    c.glVertexArrayAttribBinding(vao, 1, 0);
-    c.glVertexArrayAttribFormat(vao, 1, 2, c.GL_FLOAT, c.GL_FALSE, 3 * @sizeOf(f32));
+    layout.push(f32, 3) catch unreachable;
+    layout.push(f32, 2) catch unreachable;
+    vao.setFormatLayout(layout);
 
-    c.glVertexArrayVertexBuffer(vao, 0, vbo.id, 0, 5 * @sizeOf(f32));
-    c.glVertexArrayElementBuffer(vao, ibo.id);
-
-    // c.glEnableVertexAttribArray(0);
-    // c.glVertexAttribPointer(0, 2, c.GL_FLOAT, c.GL_FALSE, 2 * @sizeOf(f32), @ptrFromInt(0));
-    // c.glEnableVertexAttribArray(1);
-    // c.glVertexAttribPointer(1, 2, c.GL_FLOAT, c.GL_FALSE, 2 * @sizeOf(f32), @ptrFromInt(2 * @sizeOf(f32)));
+    vao.bindVertexBufferObject(vbo, 5 * @sizeOf(f32));
+    vao.bindIndexBufferObject(ibo);
 
     var raster = RasterShader.init(vertSource, fragSource) catch unreachable;
     defer raster.deinit();
@@ -103,15 +99,13 @@ pub fn main() !void {
 
         c.glClear(c.GL_COLOR_BUFFER_BIT);
 
-        compute.bind();
         compute.dispatch(SCREEN_WIDTH / 16, SCREEN_HEIGHT / 16, 1);
 
         raster.bind();
         c.glBindTextureUnit(0, screenTex);
         c.glUniform1i(c.glGetUniformLocation(raster.id, "screen"), 0);
 
-        //c.glDrawArrays(c.GL_TRIANGLES, 0, 6);
-        c.glBindVertexArray(vao);
+        vao.bind();
         c.glDrawElements(c.GL_TRIANGLES, @intCast(ibo.indexCount), c.GL_UNSIGNED_INT, null);
 
         c.glfwSwapBuffers(createWindow);
