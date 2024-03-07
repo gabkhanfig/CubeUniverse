@@ -109,6 +109,7 @@ pub const ComputeShader = struct {
         setShaderUniform(self.id, T, uniformName, &self.map, value);
     }
 
+    /// Binds and dispatch's compute, with a memory barrier.
     pub fn dispatch(self: Self, numGroupsX: u32, numGroupsY: u32, numGroupsZ: u32) void {
         self.bind();
         c.glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);

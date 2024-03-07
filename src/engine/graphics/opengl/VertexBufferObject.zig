@@ -40,6 +40,6 @@ pub fn unbind() void {
     currentBoundVBO = 0;
 }
 
-pub fn isBound(self: *const Self) bool {
+fn isBound(self: *const Self) bool {
     return self.id == currentBoundVBO;
 }
