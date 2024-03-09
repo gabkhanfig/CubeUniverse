@@ -337,7 +337,7 @@ pub const StringUnmanaged = extern struct {
     /// Mutates self, does not mutate other.
     pub fn appendSlice(self: *Self, allocator: Allocator, other: [:0]const u8) Allocator.Error!void {
         const currentCapacity: usize = if (self.isSso()) SsoRep.MAX_LEN else self._rep.heap.capacity();
-        try self.ensureTotalCapacity(allocator, currentCapacity + other.len);
+        try self.ensureTotalCapacity(allocator, currentCapacity + other.len + 1); // null terminator
         if (self.isSso()) {
             const offset: []u8 = self._rep.sso.chars[self._rep.sso.len()..][0..other.len];
             @memcpy(offset, other);
@@ -360,7 +360,7 @@ pub const StringUnmanaged = extern struct {
     /// Essentially appends rhs to the end of a copy of lhs.
     pub fn concatSlice(allocator: Allocator, lhs: *const Self, rhs: [:0]const u8) Allocator.Error!void {
         const lhsCapacity: usize = if (lhs.isSso()) SsoRep.MAX_LEN else lhs._rep.heap.capacity();
-        var self = try Self.initCapacity(allocator, lhsCapacity + rhs.len);
+        var self = try Self.initCapacity(allocator, lhsCapacity + rhs.len + 1); // null terminator
         if (self.isSso()) {
             var i: usize = 0;
             for (rhs) |c| {
