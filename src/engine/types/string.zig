@@ -423,10 +423,8 @@ pub const StringUnmanaged = extern struct {
     }
 
     pub fn substring(self: *const Self, allocator: Allocator, startIndexInclusive: usize, endIndexExclusive: usize) Allocator.Error!Self {
-        _ = self;
-        _ = allocator;
-        _ = startIndexInclusive;
-        _ = endIndexExclusive;
+        const slice = self.toSlice()[startIndexInclusive..][0 .. endIndexExclusive - startIndexInclusive :0];
+        return Self.fromSlice(allocator, slice);
     }
 
     /// Create a new `StringUnmanaged` with character representing the providing bool value.
