@@ -909,3 +909,13 @@ test "equal" {
         try expect(!s1.eql(s2));
     }
 }
+
+test "hash" {
+    const allocator = std.testing.allocator;
+    { // same hash for identical strings
+        const s1 = try StringUnmanaged.fromSlice(allocator, "hello world!");
+        const s2 = try s1.clone(allocator);
+
+        try expect(s1.hash() == s2.hash());
+    }
+}

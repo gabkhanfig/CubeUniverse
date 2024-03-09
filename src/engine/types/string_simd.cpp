@@ -176,9 +176,10 @@ extern "C" size_t stringComputeHashSimd(const char* selfBuffer, size_t len, bool
 		h = 0 ^ (len * HASH_MODIFIER);
 		const __m256i thisVec = _mm256_loadu_epi8((const void*)selfBuffer);
 		const __m256i hashIter = stringHashIteration(&thisVec, static_cast<char>(len));
+        const size_t* hashPtr = reinterpret_cast<const size_t*>(&hashIter);
 
 		for (size_t i = 0; i < 4; i++) {
-			h ^= hashIter.m256i_u64[i];
+			h ^= hashPtr[i];
 			h *= HASH_MODIFIER;
 			h ^= h >> HASH_SHIFT;
 		}
@@ -198,9 +199,10 @@ extern "C" size_t stringComputeHashSimd(const char* selfBuffer, size_t len, bool
 			const char num = i != (iterationsToDo - 1) ? static_cast<char>(32) : static_cast<char>((iterationsToDo * i) - len);
 			//check_le(num, 32);
 			const __m256i hashIter = stringHashIteration(thisVec + i, num);
+            const size_t* hashPtr = reinterpret_cast<const size_t*>(&hashIter);
 
 			for (size_t j = 0; j < 4; j++) {
-				h ^= hashIter.m256i_u64[j];
+			    h ^= hashPtr[i];
 				h *= HASH_MODIFIER;
 				h ^= h >> HASH_SHIFT;
 			}
