@@ -8,7 +8,7 @@ extern fn stringCompareEqualStringAndStringSimdHeapRep(selfBuffer: [*c]const u8,
 /// See string_simd.cpp
 extern fn stringCompareEqualStringAndSliceSimdHeapRep(selfBuffer: [*c]const u8, otherBuffer: [*c]const u8, len: c_ulonglong) bool;
 /// See string_simd.cpp
-extern fn stringComputeHashSimd(selfBuffer: [*c]const u8, len: c_ulonglong, isSso: bool) c_ulonglong;
+extern fn stringComputeHashSimd(selfBuffer: [*c]const u8, len: c_ulonglong) c_ulonglong;
 
 /// Utility functions for string slice handling
 pub const Slice = struct {
@@ -309,9 +309,9 @@ pub const StringUnmanaged = extern struct {
 
     pub fn hash(self: *const Self) usize {
         if (self.isSso()) {
-            return @intCast(stringComputeHashSimd(@ptrCast(&self._rep.sso.chars), self._rep.sso.len(), true));
+            return @intCast(stringComputeHashSimd(@ptrCast(&self._rep.sso.chars), self._rep.sso.len()));
         } else {
-            return @intCast(stringComputeHashSimd(@ptrCast(self._rep.heap.data), self._rep.heap.len, false));
+            return @intCast(stringComputeHashSimd(@ptrCast(self._rep.heap.data), self._rep.heap.len));
         }
     }
 
@@ -915,6 +915,29 @@ test "hash" {
     { // same hash for identical strings
         const s1 = try StringUnmanaged.fromSlice(allocator, "hello world!");
         const s2 = try s1.clone(allocator);
+
+        try expect(s1.hash() == s2.hash());
+    }
+    { // same hash for heap strings
+        const s1 = try StringUnmanaged.fromSlice(allocator, "hello world! aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        defer s1.deinit(allocator);
+
+        const s2 = try s1.clone(allocator);
+        defer s2.deinit(allocator);
+
+        try expect(s1.hash() == s2.hash());
+    }
+    { // same hash for same strings with different allocations
+        const s1 = try StringUnmanaged.fromSlice(allocator, "hello world!");
+        defer s1.deinit(allocator);
+
+        var s2 = try s1.clone(allocator);
+        defer s2.deinit(allocator);
+
+        try s2.reserve(allocator, 100);
+
+        try expect(s1.len() == s2.len());
+        try expect(std.mem.eql(u8, s1.toSlice(), s2.toSlice()));
 
         try expect(s1.hash() == s2.hash());
     }

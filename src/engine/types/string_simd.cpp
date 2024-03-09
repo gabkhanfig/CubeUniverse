@@ -166,13 +166,13 @@ extern "C" bool stringCompareEqualStringAndSliceSimdHeapRep(const char* selfBuff
     return func(selfBuffer, otherBuffer, len);
 }
 
-extern "C" size_t stringComputeHashSimd(const char* selfBuffer, size_t len, bool isSso) {
+extern "C" size_t stringComputeHashSimd(const char* selfBuffer, size_t len) {
     constexpr size_t HASH_MODIFIER = 0xc6a4a7935bd1e995ULL;
 	constexpr size_t HASH_SHIFT = 47;
 
     size_t h = 0;
 
-    if (isSso) {
+    if (len < 24) { // It's unlikely that a heap string will be small, unless `reserve()` is used, so this is reasonable.
 		h = 0 ^ (len * HASH_MODIFIER);
 		const __m256i thisVec = _mm256_loadu_epi8((const void*)selfBuffer);
 		const __m256i hashIter = stringHashIteration(&thisVec, static_cast<char>(len));
