@@ -7,6 +7,8 @@ const expect = std.testing.expect;
 extern fn stringCompareEqualStringAndStringSimdHeapRep(selfBuffer: [*c]const u8, otherBuffer: [*c]const u8, len: c_ulonglong) bool;
 /// See string_simd.cpp
 extern fn stringCompareEqualStringAndSliceSimdHeapRep(selfBuffer: [*c]const u8, otherBuffer: [*c]const u8, len: c_ulonglong) bool;
+/// See string_simd.cpp
+extern fn stringComputeHashSimd(selfBuffer: [*c]const u8, len: c_ulonglong, isSso: bool) c_ulonglong;
 
 /// Utility functions for string slice handling
 pub const Slice = struct {
@@ -306,9 +308,11 @@ pub const StringUnmanaged = extern struct {
     }
 
     pub fn hash(self: *const Self) usize {
-        // TODO explicit AVX512 or AVX2 from calling extern C function. The AVX512 version does not have to equal the AVX2 version, as long as only one is used during application runtime.
-        _ = self;
-        return 0;
+        if (self.isSso()) {
+            return @intCast(stringComputeHashSimd(@ptrCast(&self._rep.sso.chars), self._rep.sso.len(), true));
+        } else {
+            return @intCast(stringComputeHashSimd(@ptrCast(self._rep.heap.data), self._rep.heap.len, false));
+        }
     }
 
     /// Pre-allocate space in the string to fit a string of at least length `requiredCapacity`.

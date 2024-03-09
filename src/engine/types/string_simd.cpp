@@ -140,6 +140,19 @@ static CmpEqStringAndSliceFunc chooseOptimalCmpEqStringAndSlice() {
     }
 }
 
+static __m256i stringHashIteration(const __m256i* vec, char num) {
+	// in the case of SSO, will ignore the 
+	const __m256i seed = _mm256_set1_epi64x(0);
+	const __m256i indices = _mm256_set_epi8(31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+	const __m256i numVec = _mm256_set1_epi8(num);
+
+	// Checks if num is greater than each value of indices.
+	// Mask is 0xFF if greater than, and 0x00 otherwise. 
+	const __m256i mask = _mm256_cmpgt_epi8(numVec, indices);
+	const __m256i partial = _mm256_and_si256(*vec, mask);
+	return _mm256_add_epi8(partial, numVec);
+}
+
 //! EXTERN FUNCTIONS TO ACCESS IN ZIG
 // C++ is used for static variables within functions.
 
@@ -153,5 +166,49 @@ extern "C" bool stringCompareEqualStringAndSliceSimdHeapRep(const char* selfBuff
     return func(selfBuffer, otherBuffer, len);
 }
 
+extern "C" size_t stringComputeHashSimd(const char* selfBuffer, size_t len, bool isSso) {
+    constexpr size_t HASH_MODIFIER = 0xc6a4a7935bd1e995ULL;
+	constexpr size_t HASH_SHIFT = 47;
 
+    size_t h = 0;
 
+    if (isSso) {
+		h = 0 ^ (len * HASH_MODIFIER);
+		const __m256i thisVec = _mm256_loadu_epi8((const void*)selfBuffer);
+		const __m256i hashIter = stringHashIteration(&thisVec, static_cast<char>(len));
+
+		for (size_t i = 0; i < 4; i++) {
+			h ^= hashIter.m256i_u64[i];
+			h *= HASH_MODIFIER;
+			h ^= h >> HASH_SHIFT;
+		}
+	}
+	else {
+		h = 0 ^ (len * HASH_MODIFIER);
+
+		const size_t iterationsToDo = ((len) % 32 == 0 ?
+			len :
+			len + (32 - (len % 32)))
+			/ 32;
+
+            
+		const __m256i* thisVec = reinterpret_cast<const __m256i*>(selfBuffer);
+
+		for (size_t i = 0; i < iterationsToDo; i++) {
+			const char num = i != (iterationsToDo - 1) ? static_cast<char>(32) : static_cast<char>((iterationsToDo * i) - len);
+			//check_le(num, 32);
+			const __m256i hashIter = stringHashIteration(thisVec + i, num);
+
+			for (size_t j = 0; j < 4; j++) {
+				h ^= hashIter.m256i_u64[j];
+				h *= HASH_MODIFIER;
+				h ^= h >> HASH_SHIFT;
+			}
+		}
+	}
+
+    h ^= h >> HASH_SHIFT;
+	h *= HASH_MODIFIER;
+	h ^= h >> HASH_SHIFT;
+	return h;
+}
