@@ -7,6 +7,9 @@ const job_system = @import("types/job_system.zig");
 const JobThread = job_system.JobThread;
 const JobSystem = job_system.JobSystem;
 const AtomicValue = std.atomic.Value;
+const AtomicOrder = std.builtin.AtomicOrder;
+const Window = @import("graphics/Window.zig");
+const OpenGLInstance = @import("graphics/opengl/OpenGLInstance.zig");
 
 const Self = @This();
 
@@ -15,6 +18,8 @@ var engineInstance: AtomicValue(?*Self) = AtomicValue(?*Self).init(null);
 allocator: Allocator,
 renderThread: *JobThread,
 jobSystem: JobSystem,
+_window: Window,
+_openglInstance: OpenGLInstance,
 
 /// Initializes the engine globally, if it hasn't been already.
 /// Call `deinit()` to deinitialize the engine globally.
@@ -37,7 +42,7 @@ pub fn init(allocator: Allocator, params: EngineInitializationParams, timeoutInM
     }
 
     while (true) {
-        if (engineInstance.load(std.builtin.AtomicOrder.Acquire) != null) {
+        if (engineInstance.load(AtomicOrder.Acquire) != null) {
             const now = std.time.Instant.now() catch unreachable;
             if (start.since(now) > timeoutAsNanos) {
                 return EngineInitError.EngineTimeout;
@@ -50,14 +55,26 @@ pub fn init(allocator: Allocator, params: EngineInitializationParams, timeoutInM
             }
         }
 
-        engineInstance.store(try Self.create(allocator, params), std.builtin.AtomicOrder.Release);
+        const newEngine = try Self.create(allocator, params);
+
+        while (engineInstance.cmpxchgWeak(null, newEngine, AtomicOrder.Release, AtomicOrder.SeqCst) == null) {
+            if (std.Thread.yield()) {
+                continue;
+            } else |_| {
+                return EngineInitError.SystemCannotYield;
+            }
+        }
+
         break;
     }
+
+    const e: ?*Self = engineInstance.load(AtomicOrder.Acquire);
+    assert(e != null);
 }
 
 /// Deinitializes the global engine, freeing it's resources.
 pub fn deinit() void {
-    const engine: ?*Self = engineInstance.load(std.builtin.AtomicOrder.Acquire);
+    const engine: ?*Self = engineInstance.load(AtomicOrder.Acquire);
     if (engine == null) {
         @panic("Cannot deinitialize a non-initialized engine");
     }
@@ -67,7 +84,6 @@ pub fn deinit() void {
 
 /// Gets the global engine instance.
 /// The lifetime of the returned value must never exceed the lifetime of the engine itself.
-/// This is mostly for testing.
 pub fn get() *Self {
     const engine: ?*Self = engineInstance.load(std.builtin.AtomicOrder.Acquire);
     assert(engine != null);
@@ -88,11 +104,15 @@ fn create(allocator: Allocator, params: EngineInitializationParams) EngineInitEr
     newEngine.allocator = allocator;
     newEngine.renderThread = try JobThread.init(&newEngine.allocator);
     newEngine.jobSystem = try JobSystem.init(newEngine.allocator, params.jobThreadCount);
+    newEngine._window = Window.init(newEngine.renderThread, 640, 480);
+    newEngine._openglInstance = OpenGLInstance.init(newEngine.renderThread);
     return newEngine;
 }
 
 fn cleanup(self: *Self) void {
     const allocator = self.allocator;
+    self._window.deinit();
+    //self._openglInstance.deinit();
     self.renderThread.deinit();
     self.jobSystem.deinit();
     allocator.destroy(self);
