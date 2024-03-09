@@ -195,19 +195,21 @@ pub const Slice = struct {
 
     /// Parses the string `slice` as a bool. Returns an error if
     /// the string is not either "true" or "false".
-    pub fn parseBool(slice: [:0]const u8) !bool {
+    pub fn parseBool(slice: [:0]const u8) ParseBoolError!bool {
         if (std.mem.eql(u8, slice, "true")) {
             return true;
         } else if (std.mem.eql(u8, slice, "false")) {
             return false;
         }
-        return error{ParseBoolError};
+        return ParseBoolError.Invalid;
     }
 
     pub const parseInt = std.fmt.parseInt;
     pub const parseUnsigned = std.fmt.parseUnsigned;
     pub const parseFloat = std.fmt.parseFloat;
 };
+
+pub const ParseBoolError = error{Invalid};
 
 ///
 pub const StringUnmanaged = extern struct {
@@ -735,6 +737,23 @@ test "slice find last slice from" {
     try expect(Slice.findLastSliceFrom(s, "world!", 18) == 12);
     try expect(Slice.findLastSliceFrom(s, "world!", 17) == null);
     try expect(Slice.findLastSliceFrom(s, "war!", 6) == null);
+}
+
+test "slice parse bool" {
+    {
+        const b = try Slice.parseBool("true");
+        try expect(b);
+    }
+    {
+        const b = try Slice.parseBool("false");
+        try expect(!b);
+    }
+    {
+        const e = Slice.parseBool("tru");
+        if (e) |_| {
+            try expect(false);
+        } else |_| {}
+    }
 }
 
 test "init" {
