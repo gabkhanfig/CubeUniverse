@@ -813,6 +813,42 @@ test "clone" {
     }
 }
 
+test "equal slice" {
+    const allocator = std.testing.allocator;
+    { // same sso
+        const slice = "abcdefg";
+
+        const s = try StringUnmanaged.fromSlice(allocator, slice);
+        defer s.deinit(allocator);
+
+        try expect(s.eqlSlice(slice));
+    }
+    { // same heap
+        const slice = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+        const s = try StringUnmanaged.fromSlice(allocator, slice);
+        defer s.deinit(allocator);
+
+        try expect(s.eqlSlice(slice));
+    }
+    { // different sso
+        const slice = "abcdefg";
+
+        const s = try StringUnmanaged.fromSlice(allocator, "abdcefg");
+        defer s.deinit(allocator);
+
+        try expect(!s.eqlSlice(slice));
+    }
+    { // different heap
+        const slice = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+        const s = try StringUnmanaged.fromSlice(allocator, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaba");
+        defer s.deinit(allocator);
+
+        try expect(!s.eqlSlice(slice));
+    }
+}
+
 test "equal" {
     const allocator = std.testing.allocator;
     {
