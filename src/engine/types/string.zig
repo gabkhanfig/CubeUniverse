@@ -849,7 +849,16 @@ test "equal slice" {
 
 test "equal" {
     const allocator = std.testing.allocator;
-    {
+    { // same sso
+        const s1 = try StringUnmanaged.fromSlice(allocator, "abcdefg");
+        defer s1.deinit(allocator);
+
+        const s2 = try s1.clone(allocator);
+        defer s2.deinit(allocator);
+
+        try expect(s1.eql(s2));
+    }
+    { // same heap
         const s1 = try StringUnmanaged.fromSlice(allocator, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         defer s1.deinit(allocator);
 
@@ -857,5 +866,23 @@ test "equal" {
         defer s2.deinit(allocator);
 
         try expect(s1.eql(s2));
+    }
+    { // different sso
+        const s1 = try StringUnmanaged.fromSlice(allocator, "abcdefg");
+        defer s1.deinit(allocator);
+
+        const s2 = try StringUnmanaged.fromSlice(allocator, "abdcefg");
+        defer s2.deinit(allocator);
+
+        try expect(!s1.eql(s2));
+    }
+    { // different heap
+        const s1 = try StringUnmanaged.fromSlice(allocator, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        defer s1.deinit(allocator);
+
+        const s2 = try StringUnmanaged.fromSlice(allocator, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaba");
+        defer s2.deinit(allocator);
+
+        try expect(!s1.eql(s2));
     }
 }
