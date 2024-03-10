@@ -119,7 +119,7 @@ pub const Inner = struct {
     fn init(allocator: *Allocator) Inner {
         return Inner{
             ._rwLock = .{},
-            .topLayer = Layer.init(allocator, 0, null, 0),
+            .topLayer = Layer.create(allocator, 0),
             .chunks = LoadedChunksHashMap.init(allocator),
             .allocator = allocator,
         };
@@ -131,13 +131,13 @@ pub const Inner = struct {
         }
 
         // Free all owned stuff.
-        self.topLayer.deinit();
+        self.topLayer.deinitWithoutFree();
         self.chunks.deinit();
 
         self._rwLock.unlock();
     }
 
-    pub fn chunkAt(self: Inner, position: TreeLayerIndices) ?Chunk {
+    pub fn chunkAt(self: *const Inner, position: TreeLayerIndices) ?Chunk {
         return self.chunks.find(position);
     }
 };
@@ -145,16 +145,15 @@ pub const Inner = struct {
 /// Corresponds with `NodeType` enum to make a tagged union,
 /// but with the advantage of Struct of Arrays for SIMD operations on the tags.
 const Node = struct { // TODO store LOD data inline?
-    const LOD_COLOR_MASK: usize = 0x0FFF000000000000;
-    const LOD_SHIFT_AMOUNT = 48;
     const POINTER_MASK: usize = 0x0000FFFFFFFFFFFF;
     const TYPE_MASK: usize = 0xF000000000000000;
-    const TYPE_SHIFT: u6 = 60;
+    const TYPE_SHIFT: u6 = 48;
 
     pub const Type = enum(usize) {
         empty = 0,
         childLayer = @shlExact(1, TYPE_SHIFT),
-        chunk = @shlExact(2, TYPE_SHIFT),
+        noodleLayer = @shlExact(2, TYPE_SHIFT),
+        chunk = @shlExact(3, TYPE_SHIFT),
     };
 
     value: usize,
@@ -172,6 +171,10 @@ const Node = struct { // TODO store LOD data inline?
                 var c = self.childLayer();
                 c.deinit();
             },
+            .noodleLayer => {
+                var c = self.noodleLayer();
+                c.deinit();
+            },
             .chunk => {
                 var c = self.chunk();
                 c.deinit();
@@ -184,18 +187,15 @@ const Node = struct { // TODO store LOD data inline?
         return @enumFromInt(maskedTag);
     }
 
-    /// Get the RGBA color representing this node as an LOD.
-    pub fn lodColor(self: Node) TreeNodeColor {
-        const maskedLod = self.value & LOD_COLOR_MASK;
-        const shifted = @shrExact(maskedLod, LOD_SHIFT_AMOUNT);
-        const asU16: u16 = @intCast(shifted);
-        return TreeNodeColor{ .mask = asU16 };
-    }
-
     /// Asserts that this node is a child layer node.
     /// Get the child layer data of this node.
     pub fn childLayer(self: Node) *Layer {
         assert(self.nodeType() == .childLayer);
+        return @ptrFromInt(self.value & POINTER_MASK);
+    }
+
+    pub fn noodleLayer(self: Node) *NoodleLayer {
+        assert(self.nodeType() == .noodleLayer);
         return @ptrFromInt(self.value & POINTER_MASK);
     }
 
@@ -206,74 +206,79 @@ const Node = struct { // TODO store LOD data inline?
         return Chunk{ .inner = @ptrFromInt(self.value & POINTER_MASK) };
     }
 
-    /// Sets the RGBA color representing this node as an LOD.
-    pub fn setLodColor(self: *Node, newLodData: TreeNodeColor) void {
-        const maskedTag = self.value & TYPE_MASK;
-        const maskedPtr = self.value & POINTER_MASK;
-
-        const lodAsUsize: usize = @intCast(newLodData.mask);
-
-        self.value = maskedTag | maskedPtr | @shlExact(lodAsUsize, LOD_SHIFT_AMOUNT);
-    }
-
     /// Calls `deinit()`.
-    /// Sets this node to hold no data, other than the associated LOD RGBA color data.
+    /// Sets this node to hold no data.
     pub fn setEmpty(self: *Node) void {
         self.deinit();
-        const maskedLod = self.value & LOD_COLOR_MASK;
-        // Clear tag (empty is 0), and pointer bits. Only keep the lod color.
-        self.value = maskedLod;
+        self.value = 0;
     }
 
     /// Calls `deinit()`.
-    /// Sets this node to hold a `Chunk`. Does not set the associated LOD RGBA color data.
+    /// Sets this node to hold a `Chunk`.
     pub fn setChunk(self: *Node, newChunk: Chunk) void {
         self.deinit();
-        const maskedLod = self.value & LOD_COLOR_MASK;
         const chunkAsUSize: usize = @bitCast(newChunk);
 
-        self.value = @intFromEnum(Type.chunk) | maskedLod | chunkAsUSize;
+        self.value = @intFromEnum(Type.chunk) | chunkAsUSize;
     }
 
     /// Calls `deinit()`.
-    /// Sets this node to hold a `Layer`. Does not set the associated LOD RGBA color data.
+    /// Sets this node to hold a `Layer`, taking ownership of `newLayer`.
     pub fn setChildLayer(self: *Node, newLayer: *Layer) void {
         self.deinit();
-        const maskedLod = self.value & LOD_COLOR_MASK;
         const layerAsUSize: usize = @intFromPtr(newLayer);
 
-        self.value = @intFromEnum(Type.childLayer) | maskedLod | layerAsUSize;
+        self.value = @intFromEnum(Type.childLayer) | layerAsUSize;
+    }
+
+    /// Calls `deinit()` on self.
+    /// Set this node to hold a `NoodleLayer`, taking ownership of `newNoodle`.
+    pub fn setNoodleLayer(self: *Node, newNoodle: *NoodleLayer) void {
+        self.deinit();
+        const noodleAsUsize: usize = @intFromPtr(newNoodle);
+
+        self.value = @intFromEnum(Type.childLayer) | noodleAsUsize;
     }
 };
 
 const Layer = struct {
-    // This is the allocator used by the tree.
+    /// This is the allocator used by the tree.
     allocator: *Allocator,
-    parent: ?*Layer,
-    indexInParent: u16,
+    /// DO NOT MODIFY
     treeLayer: u8,
-    /// Do not access
-    /// Do not access
     nodes: [tree_layer_indices.TREE_NODES_PER_LAYER]Node align(64),
 
     /// If `parent` is null, `indexInParent` is useless. Use 0.
-    fn init(allocator: *Allocator, treeLayer: u8, parent: ?*Layer, indexInParent: u16) Layer {
+    pub fn init(allocator: *Allocator, treeLayer: u8) Allocator.Error!*Layer {
+        const self = try allocator.create(Layer);
+        self.* = Layer.create(allocator, treeLayer);
+        return self;
+    }
+
+    /// Frees the memory associated with `self`. Assumes this `self` was
+    /// created using `init()`, and thus was allocated using an allocator, not in-place.
+    pub fn deinit(self: *Layer) void {
+        self.deinitWithoutFree();
+        const allocator = self.allocator;
+        allocator.destroy(self);
+    }
+
+    /// Does not free the memory associated with `self`.
+    pub fn deinitWithoutFree(self: *Layer) void {
+        for (0..tree_layer_indices.TREE_NODES_PER_LAYER) |i| {
+            self.nodes[i].deinit();
+        }
+    }
+
+    fn create(allocator: *Allocator, treeLayer: u8) Layer {
         assert(treeLayer < tree_layer_indices.TREE_LAYERS);
 
         return Layer{
             //.tree = tree,
             .allocator = allocator,
-            .parent = parent,
-            .indexInParent = indexInParent,
             .treeLayer = treeLayer,
             .nodes = .{Node.init()} ** tree_layer_indices.TREE_NODES_PER_LAYER,
         };
-    }
-
-    fn deinit(self: *Layer) void {
-        for (0..tree_layer_indices.TREE_NODES_PER_LAYER) |i| {
-            self.nodes[i].deinit();
-        }
     }
 
     pub fn isAllEmpty(self: Layer) bool { // TODO optimize with avx512
@@ -281,6 +286,39 @@ const Layer = struct {
             if (self.nodes[i].nodeType() == .empty) return false;
         }
         return true;
+    }
+};
+
+const NoodleLayer = struct {
+    indices: [tree_layer_indices.TREE_LAYERS]TreeLayerIndices.Index,
+    jumpStart: u4 = 0,
+    jumpEnd: u4 = 0,
+    layer: Layer,
+
+    /// Creates a new instance of `NoodleLayer`.
+    /// `indices` specifies the indices that are being skipped over, ranging from `layerStart` to `layerEnd` inclusively.
+    /// `layerEnd` will be the resulting layer's `treeLayer`.
+    pub fn init(allocator: *Allocator, indices: TreeLayerIndices, layerStart: u4, layerEnd: u4) Allocator.Error!*NoodleLayer {
+        var self = try allocator.create(NoodleLayer);
+        self.* = NoodleLayer{
+            .indices = TreeLayerIndices.Index{ .index = 255 } ** tree_layer_indices.TREE_LAYERS, // Enforce invalid indices for the layers this Noodle does not cover.
+            .jumpStart = layerStart,
+            .jumpEnd = layerEnd,
+            .layer = Layer.create(allocator, layerEnd),
+        };
+
+        for (layerStart..(layerEnd + 1)) |i| {
+            self.indices[i] = indices.indexAtLayer(i);
+        }
+
+        return self;
+    }
+
+    /// Frees self.
+    pub fn deinit(self: *NoodleLayer) void {
+        self.layer.deinitWithoutFree();
+        const allocator = self.layer.allocator;
+        allocator.destroy(self);
     }
 };
 
