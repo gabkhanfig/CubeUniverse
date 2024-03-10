@@ -168,11 +168,11 @@ const Node = struct { // TODO store LOD data inline?
         switch (self.nodeType()) {
             .empty => {},
             .childLayer => {
-                var c = self.childLayer();
+                var c = self.childLayerMut();
                 c.deinit();
             },
             .noodleLayer => {
-                var c = self.noodleLayer();
+                var c = self.noodleLayerMut();
                 c.deinit();
             },
             .chunk => {
@@ -188,19 +188,38 @@ const Node = struct { // TODO store LOD data inline?
     }
 
     /// Asserts that this node is a child layer node.
-    /// Get the child layer data of this node.
-    pub fn childLayer(self: *const Node) *Layer {
+    /// Gets immutable access to the child layer data of this node.
+    pub fn childLayer(self: *const Node) *const Layer {
         assert(self.nodeType() == .childLayer);
         return @ptrFromInt(self.value & POINTER_MASK);
     }
 
-    pub fn noodleLayer(self: *const Node) *NoodleLayer {
+    /// Asserts that this node is a child layer node.
+    /// Gets immutable access to the child noodle layer data of this node.
+    pub fn noodleLayer(self: *const Node) *const NoodleLayer {
+        assert(self.nodeType() == .noodleLayer);
+        return @ptrFromInt(self.value & POINTER_MASK);
+    }
+
+    /// Asserts that this node is a child layer node.
+    /// Gets mutable access to the child layer data of this node.
+    pub fn childLayerMut(self: *Node) *Layer {
+        assert(self.nodeType() == .childLayer);
+        return @ptrFromInt(self.value & POINTER_MASK);
+    }
+
+    /// Asserts that this node is a child layer node.
+    /// Gets mutable access to the child noodle layer data of this node.
+    pub fn noodleLayerMut(self: *Node) *NoodleLayer {
         assert(self.nodeType() == .noodleLayer);
         return @ptrFromInt(self.value & POINTER_MASK);
     }
 
     /// Asserts that this node is a chunk node.
     /// Get the chunk data of this node.
+    /// This is allowed even when `self` is a const reference
+    /// because the chunk uses it's own thread safety measures, and
+    /// will have a valid lifetime until the engine's cleanup cycle during a frame.
     pub fn chunk(self: *const Node) Chunk {
         assert(self.nodeType() == .chunk);
         return Chunk{ .inner = @ptrFromInt(self.value & POINTER_MASK) };
