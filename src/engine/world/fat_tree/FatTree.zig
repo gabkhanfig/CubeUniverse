@@ -182,26 +182,26 @@ const Node = struct { // TODO store LOD data inline?
         }
     }
 
-    pub fn nodeType(self: Node) Type {
+    pub fn nodeType(self: *const Node) Type {
         const maskedTag = self.value & TYPE_MASK;
         return @enumFromInt(maskedTag);
     }
 
     /// Asserts that this node is a child layer node.
     /// Get the child layer data of this node.
-    pub fn childLayer(self: Node) *Layer {
+    pub fn childLayer(self: *const Node) *Layer {
         assert(self.nodeType() == .childLayer);
         return @ptrFromInt(self.value & POINTER_MASK);
     }
 
-    pub fn noodleLayer(self: Node) *NoodleLayer {
+    pub fn noodleLayer(self: *const Node) *NoodleLayer {
         assert(self.nodeType() == .noodleLayer);
         return @ptrFromInt(self.value & POINTER_MASK);
     }
 
     /// Asserts that this node is a chunk node.
     /// Get the chunk data of this node.
-    pub fn chunk(self: Node) Chunk {
+    pub fn chunk(self: *const Node) Chunk {
         assert(self.nodeType() == .chunk);
         return Chunk{ .inner = @ptrFromInt(self.value & POINTER_MASK) };
     }
@@ -246,7 +246,7 @@ const Layer = struct {
     allocator: *Allocator,
     /// DO NOT MODIFY
     treeLayer: u8,
-    nodes: [tree_layer_indices.TREE_NODES_PER_LAYER]Node align(64),
+    _nodes: [tree_layer_indices.TREE_NODES_PER_LAYER]Node align(64),
 
     /// If `parent` is null, `indexInParent` is useless. Use 0.
     pub fn init(allocator: *Allocator, treeLayer: u8) Allocator.Error!*Layer {
@@ -266,7 +266,7 @@ const Layer = struct {
     /// Does not free the memory associated with `self`.
     pub fn deinitWithoutFree(self: *Layer) void {
         for (0..tree_layer_indices.TREE_NODES_PER_LAYER) |i| {
-            self.nodes[i].deinit();
+            self._nodes[i].deinit();
         }
     }
 
@@ -277,15 +277,23 @@ const Layer = struct {
             //.tree = tree,
             .allocator = allocator,
             .treeLayer = treeLayer,
-            .nodes = .{Node.init()} ** tree_layer_indices.TREE_NODES_PER_LAYER,
+            ._nodes = .{Node.init()} ** tree_layer_indices.TREE_NODES_PER_LAYER,
         };
     }
 
     pub fn isAllEmpty(self: Layer) bool { // TODO optimize with avx512
         for (0..tree_layer_indices.TREE_NODES_PER_LAYER) |i| {
-            if (self.nodes[i].nodeType() == .empty) return false;
+            if (self._nodes[i].nodeType() == .empty) return false;
         }
         return true;
+    }
+
+    pub fn nodeAt(self: *const Layer, index: TreeLayerIndices.Index) *const Node {
+        return &self._nodes[index.index];
+    }
+
+    pub fn nodeAtMut(self: *Layer, index: TreeLayerIndices.Index) *Node {
+        return &self._nodes[index.index];
     }
 };
 
