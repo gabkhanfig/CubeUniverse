@@ -256,7 +256,7 @@ const Node = struct { // TODO store LOD data inline?
         self.deinit();
         const noodleAsUsize: usize = @intFromPtr(newNoodle);
 
-        self.value = @intFromEnum(Type.childLayer) | noodleAsUsize;
+        self.value = @intFromEnum(Type.noodleLayer) | noodleAsUsize;
     }
 };
 
@@ -341,7 +341,7 @@ const NoodleLayer = struct {
         return self;
     }
 
-    /// Frees self.
+    /// Frees the memory associated with self, and deinitializes all children.
     pub fn deinit(self: *NoodleLayer) void {
         self.layer.deinitWithoutFree();
         const allocator = self.layer.allocator;
