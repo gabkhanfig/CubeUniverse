@@ -327,8 +327,10 @@ test "Node size and align" {
     try expect(@alignOf(Node) == 8);
 }
 
-test "Layer align" {
+test "Layer NoodleLayer align" {
+    // There will be a lot of multithreaded tomfoolery going on
     try expect(@alignOf(Layer) == 64);
+    try expect(@alignOf(NoodleLayer) == 64);
 }
 
 test "init deinit FatTree" {
