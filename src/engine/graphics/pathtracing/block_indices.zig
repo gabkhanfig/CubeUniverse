@@ -3,6 +3,8 @@ const world_transform = @import("../../world/world_transform.zig");
 const CHUNK_LENGTH = world_transform.CHUNK_LENGTH;
 const CHUNK_SIZE = world_transform.CHUNK_SIZE;
 
+// TODO maybe possible to specify an offset into a buffer, and then use heavy compression to then indirectly specify the BlockState.
+
 /// Represents the index of the GLSL shader buffer object of all the block states.
 pub const BlockStatePathtraceIndices = extern struct {
     /// A value of 0 for an index means air.
