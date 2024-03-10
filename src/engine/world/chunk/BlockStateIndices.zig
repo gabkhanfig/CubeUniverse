@@ -20,7 +20,6 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const world_transform = @import("../world_transform.zig");
 const BlockIndex = world_transform.BlockIndex;
-const CHUNK_LENGTH = world_transform.CHUNK_LENGTH;
 const CHUNK_SIZE = world_transform.CHUNK_SIZE;
 const expect = std.testing.expect;
 const assert = std.debug.assert;
@@ -395,38 +394,17 @@ const BlockStateIndices8Bit = struct {
     }
 };
 
-/// This structure can be directly translated to GLSL, since it is just an array of u32.
-pub const BlockStateIndices16Bit = extern struct {
-    const ARRAY_SIZE = CHUNK_SIZE / 2;
-    const BITMASK: u32 = 0b1111111111111111;
+const BlockStateIndices16Bit = struct {
+    indices: [CHUNK_SIZE]u16 = .{0} ** CHUNK_SIZE,
 
-    indices: [ARRAY_SIZE]u32 = std.mem.zeroes([ARRAY_SIZE]u32),
-
-    /// For GLSL, `position` can just be the equivalent of `BlockIndex` in GLSL, of a type u32.
-    pub fn indexAt(self: BlockStateIndices16Bit, position: BlockIndex) u16 {
-        const arrayIndex = position.index / 2;
-        const shift: u5 = @intCast((position.index & 1) * 16); // Will either be highest 16 bits, or lowest
-        const bitmask = @shlExact(BITMASK, shift);
-
-        const masked = self.indices[arrayIndex] & bitmask;
-        return @intCast(@shrExact(masked, shift));
+    fn indexAt(self: BlockStateIndices16Bit, position: BlockIndex) u16 {
+        return self.indices[position.index];
     }
 
-    /// This function may not be used in GLSL, as shaders will be read-only for the world data.
-    pub fn setIndexAt(self: *BlockStateIndices16Bit, index: u16, position: BlockIndex) void {
-        const arrayIndex = position.index / 2;
-        const shift: u5 = @intCast((position.index & 1) * 16); // Will either be highest 16 bits, or lowest
-
-        const bitmask: u32 = @shlExact(BITMASK, shift);
-        const bitmaskInvert: u32 = ~bitmask;
-
-        const indexAsU32: u32 = @intCast(index);
-
-        self.indices[arrayIndex] = (self.indices[arrayIndex] & bitmaskInvert) | @shlExact(indexAsU32, shift);
+    fn setIndexAt(self: *BlockStateIndices16Bit, index: u16, position: BlockIndex) void {
+        self.indices[position.index] = index;
     }
 };
-
-pub const BlockPathtraceIndices = BlockStateIndices16Bit;
 
 // Tests
 
@@ -493,45 +471,16 @@ test "BlockStateIndices8Bit" {
 test "BlockStateIndices16Bit" {
     try expect(@sizeOf(BlockStateIndices16Bit) == 65536);
 
-    var indices = BlockStateIndices16Bit{};
+    var indices: BlockStateIndices16Bit = .{};
 
-    const ind1 = BlockIndex.init(0, 0, 0);
-    const ind2 = BlockIndex{ .index = 64 };
-    const ind3 = BlockIndex{ .index = 65 };
-    const ind4 = BlockIndex.init(CHUNK_LENGTH - 1, CHUNK_LENGTH - 1, CHUNK_LENGTH - 1);
+    try expect(indices.indexAt(BlockIndex.init(0, 0, 0)) == 0);
+    try expect(indices.indexAt(BlockIndex.init(9, 8, 8)) == 0);
 
-    try expect(indices.indexAt(ind1) == 0);
-    try expect(indices.indexAt(ind2) == 0);
-    try expect(indices.indexAt(ind3) == 0);
-    try expect(indices.indexAt(ind4) == 0);
+    indices.setIndexAt(4321, BlockIndex.init(0, 0, 0));
+    indices.setIndexAt(4321, BlockIndex.init(9, 8, 8));
 
-    indices.setIndexAt(4321, ind1);
-    indices.setIndexAt(4321, ind2);
-    indices.setIndexAt(4321, ind3);
-    indices.setIndexAt(4321, ind4);
-
-    try expect(indices.indexAt(ind1) == 4321);
-    try expect(indices.indexAt(ind2) == 4321);
-    try expect(indices.indexAt(ind3) == 4321);
-    try expect(indices.indexAt(ind4) == 4321);
-
-    indices.setIndexAt(0, ind1);
-    indices.setIndexAt(0, ind2);
-
-    try expect(indices.indexAt(ind1) == 0);
-    try expect(indices.indexAt(ind2) == 0);
-    try expect(indices.indexAt(ind3) == 4321);
-    try expect(indices.indexAt(ind4) == 4321);
-
-    indices.setIndexAt(4321, ind1);
-    indices.setIndexAt(4321, ind2);
-    indices.setIndexAt(0, ind3);
-    indices.setIndexAt(0, ind4);
-
-    try expect(indices.indexAt(ind1) == 4321);
-    try expect(indices.indexAt(ind2) == 4321);
-    try expect(indices.indexAt(ind3) == 0);
-    try expect(indices.indexAt(ind4) == 0);
+    try expect(indices.indexAt(BlockIndex.init(0, 0, 0)) == 4321);
+    try expect(indices.indexAt(BlockIndex.init(9, 8, 8)) == 4321);
 }
 
 test "Init deinit" {
