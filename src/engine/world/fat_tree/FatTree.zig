@@ -112,14 +112,14 @@ pub fn unlockTreeModify(self: *Self) void {
 
 pub const Inner = struct {
     _rwLock: RwLock,
-    topLayer: Layer,
+    topNode: Node,
     chunks: LoadedChunksHashMap,
     allocator: *Allocator,
 
     fn init(allocator: *Allocator) Inner {
         return Inner{
             ._rwLock = .{},
-            .topLayer = Layer.create(allocator, 0),
+            .topNode = Node.init(),
             .chunks = LoadedChunksHashMap.init(allocator),
             .allocator = allocator,
         };
@@ -131,7 +131,7 @@ pub const Inner = struct {
         }
 
         // Free all owned stuff.
-        self.topLayer.deinitWithoutFree();
+        self.topNode.deinit();
         self.chunks.deinit();
 
         self._rwLock.unlock();
