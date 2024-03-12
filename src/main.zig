@@ -10,7 +10,7 @@ const Vao = @import("engine/graphics/opengl/VertexArrayObject.zig");
 // const fragSource = @embedFile("assets/basic.frag");
 const vertSource = @embedFile("assets/pathtrace.vert");
 const fragSource = @embedFile("assets/pathtrace.frag");
-const compSource = @embedFile("assets/test.comp");
+const compSource = @embedFile("assets/pathtracer.comp");
 
 const SCREEN_WIDTH = 640;
 const SCREEN_HEIGHT = 640;
@@ -55,9 +55,6 @@ pub fn main() !void {
         0, 3, 2,
     };
 
-    // var vao: u32 = undefined;
-    // c.glCreateVertexArrays(1, &vao);
-
     var vbo = Vbo.init();
     vbo.bufferData(f32, &vertices);
     vbo.bind();
@@ -92,18 +89,23 @@ pub fn main() !void {
     var compute = ComputeShader.init(compSource) catch unreachable;
     defer compute.deinit();
 
-    //shader.bind();
+    var x: f64 = 0;
+    var colorOffset: f32 = 0;
 
     while (c.glfwWindowShouldClose(createWindow) != c.GLFW_TRUE) {
+        x += 0.01;
+        colorOffset = @floatCast((std.math.sin(x) + 1.0) / 4.0);
+
         c.glfwPollEvents();
 
         c.glClear(c.GL_COLOR_BUFFER_BIT);
 
         compute.dispatch(SCREEN_WIDTH / 16, SCREEN_HEIGHT / 16, 1);
+        compute.setUniform("colorOffset", f32, colorOffset);
 
         raster.bind();
         c.glBindTextureUnit(0, screenTex);
-        c.glUniform1i(c.glGetUniformLocation(raster.id, "screen"), 0);
+        c.glUniform1i(c.glGetUniformLocation(raster.id, "screenOutput"), 0);
 
         vao.bind();
         c.glDrawElements(c.GL_TRIANGLES, @intCast(ibo.indexCount), c.GL_UNSIGNED_INT, null);
