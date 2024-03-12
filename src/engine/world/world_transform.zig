@@ -192,7 +192,7 @@ pub const BlockPosition = extern struct {
 /// Position of anything within the `FatTree` structure.
 /// Internally uses `TreeLayerIndices` to specify which chunk it is in,
 /// and then a 32 bit 3 component float `vec3` for where within the chunk.
-/// This structure can be used on the GPU.
+/// This structure can be used in the GLSL.
 /// - Size = 24 bytes
 /// - Align = 4 bytes
 /// - field `treePosition` byte offset = 0

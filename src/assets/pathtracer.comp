@@ -2,12 +2,43 @@
 
 #version 460 core
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
-layout(rgba32f, binding = 0) uniform image2D screenOutput; // screen texture to then draw in pathtracer.vert and pathtracer.frag
-
-uniform float colorOffset;
 
 #define CHUNK_LENGTH 32
 #define CHUNK_SIZE (CHUNK_LENGTH * CHUNK_LENGTH * CHUNK_LENGTH)
+#define TREE_NODE_LENGTH 4
+#define TREE_NODES_PER_LAYER (TREE_NODE_LENGTH * TREE_NODE_LENGTH * TREE_NODE_LENGTH)
+#define TREE_LAYERS 15
+
+// Corresponds with TreeLayerIndices in tree_layer_indices.zig
+struct TreeLayerIndices {
+    uint values[3];
+};
+
+uint tree_layer_indices_index_at_layer(TreeLayerIndices self, uint layer) {
+    const uint BITSHIFT_MULTIPLE = 6;
+    const uint BITMASK_LAYER_INDEX = 0x3F;
+
+    const uint valueIndex = layer % 3;
+    const uint bitshift = layer * 6;
+    const uint index = (self.values[valueIndex] >> bitshift) & BITMASK_LAYER_INDEX;
+    return index;
+}
+
+// Corresponds with WorldPosition in world_transform.zig
+struct WorldPosition {
+    TreeLayerIndices treePosition;
+    vec3 offset;
+};
+
+// Undefined behaviour if the components of `self.offset` is outside the range 0 <= self.offset.component < CHUNK_LENGTH
+uint world_position_as_block_index(WorldPosition self) {
+    const ivec3 offsetAsInt = ivec3(int(self.offset.x), int(self.offset.y), int(self.offset.z));
+    return offsetAsInt.x + (offsetAsInt.z * CHUNK_LENGTH) + (offsetAsInt.y * CHUNK_LENGTH * CHUNK_LENGTH);
+}
+
+layout(rgba32f, binding = 0) uniform image2D screenOutput; // screen texture to then draw in pathtracer.vert and pathtracer.frag
+uniform float colorOffset;
+
 
 // All used block states will be in an array. FOR NOW, 0 is empty, 1 is a block
 
