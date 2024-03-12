@@ -60,7 +60,7 @@ pub const RasterShader = struct {
     }
 
     pub fn setUniform(self: *Self, uniformName: [:0]const u8, comptime T: type, value: T) void {
-        setShaderUniform(self.id, T, uniformName, &self.map, value);
+        setShaderUniform(self.id, T, uniformName, &self.uniforms, value);
     }
 };
 
@@ -106,7 +106,7 @@ pub const ComputeShader = struct {
     }
 
     pub fn setUniform(self: *Self, uniformName: [:0]const u8, comptime T: type, value: T) void {
-        setShaderUniform(self.id, T, uniformName, &self.map, value);
+        setShaderUniform(self.id, T, uniformName, &self.uniforms, value);
     }
 
     /// Binds and dispatch's compute, with a memory barrier.
@@ -193,14 +193,14 @@ fn isShaderBound(programId: u32) bool {
 fn getUniformLocation(programId: u32, uniformName: [:0]const u8, map: *StringHashMap(u32)) u32 {
     const found = map.get(uniformName);
     if (found != null) {
-        return found;
+        return found.?;
     }
 
     const location = c.glGetUniformLocation(programId, uniformName.ptr);
     if (location == -1) {
         std.debug.print("Invalid uniform name: {s}", .{uniformName});
     }
-    map.put(uniformName, location) catch unreachable;
+    map.put(uniformName, @intCast(location)) catch unreachable;
     return @intCast(location);
 }
 
